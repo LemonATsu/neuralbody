@@ -53,7 +53,6 @@ class Dataset(data.Dataset):
         K, RT = self.load_cam(ann_file)
         self.Ks = np.array(K)[idxs].astype(np.float32)
         self.RT = np.array(RT)[idxs].astype(np.float32)
-        import pdb; pdb.set_trace()
         """
         self.train_ims = np.array([
             np.array(ims_data['ims'])[cfg.training_view]

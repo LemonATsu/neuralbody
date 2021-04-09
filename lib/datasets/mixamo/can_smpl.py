@@ -22,7 +22,7 @@ class Dataset(data.Dataset):
         annots = np.load(ann_file, allow_pickle=True).item()
         # hard-coded for now!
         num_cams = 140 * 4
-        idxs = np.arange(len(annots['ims']))[-num_cams:-num_cams+140:]
+        idxs = np.arange(len(annots['ims']))[-num_cams:]
         self.cams = annots['cams']
 
         self.ims = np.array(annots['ims'])[idxs]
@@ -161,7 +161,6 @@ class Dataset(data.Dataset):
             rgb, ray_o, ray_d, near, far, coord_, mask_at_box = if_nerf_dutils.sample_ray_grid(
                 img, msk, K, R, T, can_bounds, self.nrays, self.split)
         else:
-            print(f"sampling rays: {index}")
             rgb, ray_o, ray_d, near, far, coord_, mask_at_box = if_nerf_dutils.sample_ray_h36m(
                 img, msk, K, R, T, can_bounds, self.nrays, self.split)
         acc = if_nerf_dutils.get_acc(coord_, msk)

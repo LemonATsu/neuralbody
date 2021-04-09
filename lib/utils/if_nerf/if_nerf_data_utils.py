@@ -56,7 +56,7 @@ def get_near_far(bounds, ray_o, ray_d):
     bounds = bounds + np.array([-0.01, 0.01])[:, None]
     nominator = bounds[None] - ray_o[:, None]
     # calculate the step of intersections at six planes of the 3d bounding box
-    d_intersect = (nominator / ray_d[:, None]).reshape(-1, 6)
+    d_intersect = (nominator / (ray_d[:, None] + 1e-8)).reshape(-1, 6)
     # calculate the six interections
     p_intersect = d_intersect[..., None] * ray_d[:, None] + ray_o[:, None]
     # calculate the intersections located at the 3d bounding box
