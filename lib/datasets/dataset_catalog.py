@@ -5,6 +5,7 @@ from lib.config import cfg
 
 class DatasetCatalog(object):
     human = cfg.human
+    subject = cfg.subject
     dataset_attrs = {
         'Human{}_0001_Train'.format(human): {
             'data_root': 'data/zju_mocap/CoreView_{}'.format(human),
@@ -163,7 +164,22 @@ class DatasetCatalog(object):
         'H36M_S11G_Test': {
             'data_root': 'data/h36m/S11/Greeting',
             'split': 'test'
-        }
+        },
+        # MIXAMO
+        'Mixamo_{}_Train'.format(subject): {
+            'data_root': 'data/mixamo/',
+            'subject': '{}'.format(subject),
+            'ann_file':
+            'data/mixamo/{}/annots.npy'.format(subject),
+            'split': 'train'
+        },
+        'Mixamo_{}_Test'.format(subject): {
+            'data_root': 'data/mixamo/',
+            'subject': '{}'.format(subject),
+            'ann_file':
+            'data/mixamo/{}/annots.npy'.format(subject),
+            'split': 'test'
+        },
     }
 
     @staticmethod
