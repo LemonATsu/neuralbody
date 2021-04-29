@@ -21,7 +21,7 @@ class Dataset(data.Dataset):
 
         annots = np.load(ann_file, allow_pickle=True).item()
         # hard-coded for now!
-        num_cams = 140 * 4
+        num_cams = 140 * 1
         idxs = np.arange(len(annots['ims']))[-num_cams:]
         self.cams = annots['cams']
 
@@ -58,13 +58,14 @@ class Dataset(data.Dataset):
         msk_path = os.path.join(self.data_root,
                                 self.ims[index].replace("ImageSequence", "Masks"))
 
-        msk = imageio.imread(msk_path)[..., :1]
-        msk = (msk != 0).astype(np.uint8)
+        msk = imageio.imread(msk_path)[..., 0]
+        msk = (msk >= 2).astype(np.uint8)
 
         border = 5
         kernel = np.ones((border, border), np.uint8)
         msk_erode = cv2.erode(msk.copy(), kernel)
         msk_dilate = cv2.dilate(msk.copy(), kernel)
+
         msk[(msk_dilate - msk_erode) == 1] = 100
 
         return msk
@@ -175,7 +176,8 @@ class Dataset(data.Dataset):
             'near': near,
             'far': far,
             'acc': acc,
-            'mask_at_box': mask_at_box
+            'mask_at_box': mask_at_box,
+            'index': index,
         }
 
         R = cv2.Rodrigues(Rh)[0].astype(np.float32)

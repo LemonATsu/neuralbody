@@ -121,8 +121,8 @@ class Dataset(data.Dataset):
             im = ims[nv]
 
             msk_path = os.path.join(self.data_root, 'mask', im)[:-4] + '.png'
-            msk = imageio.imread(msk_path)
-            msk = (msk != 0).astype(np.uint8)
+            msk = imageio.imread(msk_path)[..., 0]
+            msk = (msk >= 2).astype(np.uint8)
 
             msk_path = os.path.join(self.data_root, 'mask_cihp',
                                     im)[:-4] + '.png'

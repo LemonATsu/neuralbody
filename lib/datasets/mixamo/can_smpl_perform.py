@@ -13,78 +13,44 @@ from lib.utils import render_utils
 
 
 class Dataset(data.Dataset):
-    def __init__(self, data_root, subject, ann_file, split):
+    def __init__(self, data_root, human, ann_file, split):
         super(Dataset, self).__init__()
 
         self.data_root = data_root
-        self.subject = subject
+        self.human = human
         self.split = split
 
         annots = np.load(ann_file, allow_pickle=True).item()
-        # hard-coded for now!
-        self.cams = annots['cams']
-        num_cams = 140 * 4
-        idxs = np.arange(len(annots['ims']))[-num_cams:4]
         self.cams = annots['cams']
 
-        self.ims = np.array(annots['ims'])[idxs]
-        self.train_ims = self.ims.reshape(-1, 1)
-        self.cam_inds = idxs
-
-        """
-        num_cams = len(self.cams['K'])
-        test_view = [i for i in range(num_cams) if i not in cfg.training_view]
-        view = cfg.training_view if split == 'train' else test_view
+        K, RT = render_utils.load_cam(ann_file)
+        render_w2c = render_utils.gen_path(RT)
 
         i = 0
         i = i + cfg.begin_i
-        i_intv = cfg.i_intv
         self.ims = np.array([
-            np.array(ims_data['ims'])[view]
-            for ims_data in annots['ims'][i:i + cfg.ni * i_intv][::i_intv]
-        ]).ravel()
-        self.cam_inds = np.array([
-            np.arange(len(ims_data['ims']))[view]
-            for ims_data in annots['ims'][i:i + cfg.ni * i_intv][::i_intv]
-        ]).ravel()
-        self.num_cams = len(view)
-        """
-
-        K, RT = self.load_cam(ann_file)
-        self.Ks = np.array(K)[idxs].astype(np.float32)
-        self.RT = np.array(RT)[idxs].astype(np.float32)
-        """
-        self.train_ims = np.array([
             np.array(ims_data['ims'])[cfg.training_view]
-            for ims_data in annots['ims'][i:i + cfg.ni * i_intv][::i_intv]
+            for ims_data in annots['ims'][i:i + cfg.ni * cfg.i_intv]
         ])
-        """
 
-        self.num_cams = len(self.ims)
-        self.nrays = cfg.N_rand
+        self.K = K[0]
+        self.render_w2c = render_w2c
 
-    def load_cam(self):
-        cams = self.cams
+        self.Ks = np.array(K)[cfg.training_view].astype(np.float32)
+        self.RT = np.array(RT)[cfg.training_view].astype(np.float32)
 
-        K = []
-        RT = []
-        lower_row = np.array([[0., 0., 0., 1.]])
+        self.Ds = np.array(self.cams['D'])[cfg.training_view].astype(np.float32)
 
-        for i in range(len(cams['K'])):
-            K.append(np.array(cams['K'][i]))
-            K[i][:2] = K[i][:2] * cfg.ratio
+        self.ni = cfg.ni * cfg.i_intv
 
-            r = np.array(cams['R'][i])
-            t = np.array(cams['T'][i]) / 1000.
-            r_t = np.concatenate([r, t], 1)
-            RT.append(np.concatenate([r_t, lower_row], 0))
+    def prepare_input(self, i):
+        i = i + cfg.begin_i
+        if self.human in ['CoreView_313', 'CoreView_315']:
+            i = i + 1
 
-        return K, RT
-
-    def prepare_input(self, index):
         # read xyz, normal, color from the ply file
-        vertices_path = os.path.join(self.data_root,
-                                     self.train_ims[index].replace("ImageSequence", "vertices")[:-4] + ".npy")
+        vertices_path = os.path.join(self.data_root, cfg.vertices,
+                                     '{}.npy'.format(i))
         xyz = np.load(vertices_path).astype(np.float32)
         nxyz = np.zeros_like(xyz).astype(np.float32)
 
@@ -100,8 +66,8 @@ class Dataset(data.Dataset):
         can_bounds = np.stack([min_xyz, max_xyz], axis=0)
 
         # transform smpl from the world coordinate to the smpl coordinate
-        params_path = os.path.join(self.data_root,
-                                   self.train_ims[index].replace("ImageSequence", "smpl")[:-4] + ".npy")
+        params_path = os.path.join(self.data_root, cfg.params,
+                                   '{}.npy'.format(i))
         params = np.load(params_path, allow_pickle=True).item()
         Rh = params['Rh']
         R = cv2.Rodrigues(Rh)[0].astype(np.float32)
@@ -138,19 +104,26 @@ class Dataset(data.Dataset):
         return feature, coord, out_sh, can_bounds, bounds, Rh, Th
 
     def get_mask(self, i):
-        ims = self.train_ims[i]
+        ims = self.ims[i]
         msks = []
 
         for nv in range(len(ims)):
             im = ims[nv]
 
-            msk_path = os.path.join(self.data_root,
-                                    im.replace("ImageSequence", "Masks"))
-            msk = imageio.imread(msk_path)[..., 0]
-            msk = (msk >= 2).astype(np.uint8)
+            msk_path = os.path.join(self.data_root, 'mask', im)[:-4] + '.png'
+            msk = imageio.imread(msk_path)
+            msk = (msk != 0).astype(np.uint8)
+
+            msk_path = os.path.join(self.data_root, 'mask_cihp',
+                                    im)[:-4] + '.png'
+            msk_cihp = imageio.imread(msk_path)
+            msk_cihp = (msk_cihp != 0).astype(np.uint8)
+
+            msk = (msk | msk_cihp).astype(np.uint8)
 
             K = self.Ks[nv].copy()
             K[:2] = K[:2] / cfg.ratio
+            msk = cv2.undistort(msk, K, self.Ds[nv])
 
             border = 5
             kernel = np.ones((border, border), np.uint8)
@@ -161,11 +134,9 @@ class Dataset(data.Dataset):
         return msks
 
     def __getitem__(self, index):
-        img_path = os.path.join(self.data_root, self.ims.ravel()[index])
-        feature, coord, out_sh, can_bounds, bounds, Rh, Th = self.prepare_input(
-            index)
-
         i = index
+        feature, coord, out_sh, can_bounds, bounds, Rh, Th = self.prepare_input(i)
+
         msks = self.get_mask(i)
 
         # reduce the image resolution by ratio
@@ -175,16 +146,12 @@ class Dataset(data.Dataset):
             for msk in msks
         ]
         msks = np.array(msks)
+        K = self.K
 
-        cam_ind = self.cam_inds[index]
-        K = np.array(self.cams['K'][cam_ind])
-        K[:2] = K[:2] * cfg.ratio
-        R = np.array(self.cams['R'][cam_ind])
-        T = np.array(self.cams['T'][cam_ind]) / 1000.
-        RT = np.concatenate([R, T], axis=1)
-
+        cam_ind = index % len(self.render_w2c)
+        # cam_ind = 50
         ray_o, ray_d, near, far, center, scale, mask_at_box = render_utils.image_rays(
-            RT, K, can_bounds)
+            self.render_w2c[cam_ind], K, can_bounds)
 
         ret = {
             'feature': feature,
@@ -198,15 +165,9 @@ class Dataset(data.Dataset):
         }
 
         R = cv2.Rodrigues(Rh)[0].astype(np.float32)
-        i = index #// self.num_cams
-        meta = {
-            'bounds': bounds,
-            'R': R,
-            'Th': Th,
-            'i': i,
-            'index': index,
-            'cam_ind': cam_ind
-        }
+        i = int(np.round(index / cfg.i_intv))
+        i = min(i, cfg.ni - 1)
+        meta = {'bounds': bounds, 'R': R, 'Th': Th, 'i': i, 'index': index}
         ret.update(meta)
 
         meta = {'msks': msks, 'Ks': self.Ks, 'RT': self.RT}
@@ -215,4 +176,4 @@ class Dataset(data.Dataset):
         return ret
 
     def __len__(self):
-        return len(self.ims)
+        return self.ni
