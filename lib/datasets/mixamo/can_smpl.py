@@ -21,8 +21,11 @@ class Dataset(data.Dataset):
 
         annots = np.load(ann_file, allow_pickle=True).item()
         # hard-coded for now!
-        num_cams = 140 * 1
-        idxs = np.arange(len(annots['ims']))[-num_cams:]
+        idxs = []
+        for i, im in enumerate(annots['ims']):
+            if 'Camera_0' in im:
+                idxs.append(i)
+        idxs = np.array(idxs)
         self.cams = annots['cams']
 
         self.ims = np.array(annots['ims'])[idxs]

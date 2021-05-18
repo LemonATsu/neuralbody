@@ -21,10 +21,10 @@ visualizer_module: 'lib.visualizers.if_nerf'
 visualizer_path: 'lib/visualizers/if_nerf.py'
 
 human: 313
-subject: 'Kachujin'
+subject: 'Archer'
 
 train:
-    dataset: Mixamo_Kachujin_Train
+    dataset: Mixamo_Archer_Train
     batch_size: 1
     collator: ''
     lr: 5e-4
@@ -34,10 +34,10 @@ train:
         type: 'exponential'
         gamma: 0.1
         decay_epochs: 1000
-    num_workers: 16
+    num_workers: 0
 
 test:
-    dataset: Mixamo_Kachujin_Test
+    dataset: Mixamo_Archer_Test
     sampler: 'FrameSampler'
     batch_size: 1
     collator: ''

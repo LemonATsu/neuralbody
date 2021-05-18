@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from lib.config import cfg
+import imageio
+import os
 
 
 class Visualizer:
@@ -23,3 +25,13 @@ class Visualizer:
         ax1.imshow(img_pred)
         ax2.imshow(img_gt)
         plt.show()
+        frame_root = 'data/result/if_nerf/{}/'.format(cfg.exp_name)
+        index = batch['index']
+
+        pred_path = os.path.join(frame_root, 'pred')
+        gt_path = os.path.join(frame_root, 'gt')
+        os.system('mkdir -p {}'.format(pred_path))
+        os.system('mkdir -p {}'.format(gt_path))
+        imageio.imwrite(os.path.join(pred_path, "%d.jpg" % index), img_pred * 255)
+        imageio.imwrite(os.path.join(gt_path, "%d.jpg" % index), img_gt * 255)
+

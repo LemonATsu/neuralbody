@@ -16,6 +16,7 @@ cfg.distributed = False
 
 # data
 cfg.human = 313
+cfg.subject = 'Kachujin'
 cfg.training_view = [0, 6, 12, 18]
 cfg.intv = 1
 cfg.begin_i = 0  # the first smpl
