@@ -21,10 +21,10 @@ visualizer_module: 'lib.visualizers.if_nerf'
 visualizer_path: 'lib/visualizers/if_nerf.py'
 
 human: 313
-subject: 'Archer'
+subject: 'James'
 
 train:
-    dataset: Mixamo_Archer_Train
+    dataset: Mixamo_James_Train
     batch_size: 1
     collator: ''
     lr: 5e-4
@@ -37,7 +37,7 @@ train:
     num_workers: 0
 
 test:
-    dataset: Mixamo_Archer_Test
+    dataset: Mixamo_James_Test
     sampler: 'FrameSampler'
     batch_size: 1
     collator: ''
