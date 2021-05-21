@@ -180,6 +180,19 @@ class DatasetCatalog(object):
             'data/mixamo/{}/annots.npy'.format(subject),
             'split': 'test'
         },
+        # PerfCap
+        'Perfcap_{}_Train'.format(subject): {
+            'data_root': 'data/',
+            'subject': '{}'.format(subject),
+            'ann_file': 'data/MonoPerfCap/{}/annots.npy'.format(subject),
+            'split': 'train',
+        },
+        'Perfcap_{}_Test'.format(subject): {
+            'data_root': 'data/',
+            'subject': '{}'.format(subject),
+            'ann_file': 'data/MonoPerfCap/{}/annots.npy'.format(subject),
+            'split': 'train',
+        }
     }
 
     @staticmethod
