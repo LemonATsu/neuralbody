@@ -29,12 +29,12 @@ train:
     collator: ''
     lr: 5e-4
     weight_decay: 0
-    epoch: 400
+    epoch: 1000
     scheduler:
         type: 'exponential'
         gamma: 0.1
         decay_epochs: 1000
-    num_workers: 0
+    num_workers: 6
 
 test:
     dataset: Mixamo_Archer_Test
