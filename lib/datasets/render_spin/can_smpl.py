@@ -22,6 +22,8 @@ def load_interpolate(data_root, annots, smpl_path_map, selected_idxs, undo_rot=F
     smpl_paths = [os.path.join(data_root, im.replace(*smpl_path_map)[:-4] + '.npy')
                   for im in ims]
     Rhs, Ths, poses, shapes = load_smpl_from_paths(smpl_paths)
+    if undo_rot:
+        Rhs[:, :] = np.array([1.5708*2, 0., 0.], dtype=np.float32).reshape(1, 3)
     poses = np.concatenate([Rhs[:, None], poses], axis=1)
 
     interp_poses, interp_shapes = [], []
@@ -68,8 +70,10 @@ def load_interpolate(data_root, annots, smpl_path_map, selected_idxs, undo_rot=F
     elif center_cam:
         interp_smpls['vertices'][..., 0] -= shift_x[:, None]
         interp_smpls['vertices'][..., 1] -= shift_y[:, None]
+        interp_smpls['Th'][..., 0] -= shift_x[:, None]
+        interp_smpls['Th'][..., 1] -= shift_y[:, None]
 
-    return interp_smpls, cams
+    return ims, interp_smpls, cams
 
 
 class Dataset(data.Dataset):
@@ -96,8 +100,9 @@ class Dataset(data.Dataset):
         self.data_root = catalog[subject]['data_root']
 
         if split == 'interpolate':
-            smpls, cams = load_interpolate(self.data_root, annots,
+            ims, smpls, cams = load_interpolate(self.data_root, annots,
                                            smpl_path_maps[data_root], **render_args)
+        self._ims = ims
         self.ims = np.arange(len(smpls['vertices']))
         self.smpls = smpls
         self.cams = cams
@@ -166,19 +171,18 @@ class Dataset(data.Dataset):
 
     def __getitem__(self, index):
 
-        img = np.ones((cfg.H, cfg.W, 3), dtype=np.float32)
         msk = np.ones((cfg.H, cfg.W), dtype=np.uint8)
 
         cam_ind = self.cam_inds[index]
+        img = imageio.imread(os.path.join(self.data_root, self._ims[cam_ind])) / 255.
         K = np.array(self.cams['K'][index])
         R = np.array(self.cams['R'][index])
         T = np.array(self.cams['T'][index])
 
         # reduce the image resolution by ratio
         H, W = int(cfg.H * cfg.ratio), int(cfg.W * cfg.ratio)
-        img = np.ones((H, W, 3), dtype=np.float32)
         msk = np.ones((H, W), dtype=np.uint8)
-        #img = cv2.resize(img, (W, H), interpolation=cv2.INTER_AREA)
+        img = cv2.resize(img, (W, H), interpolation=cv2.INTER_AREA)
         #msk = cv2.resize(msk, (W, H), interpolation=cv2.INTER_NEAREST)
         if cfg.mask_bkgd:
             img[msk == 0] = 0
