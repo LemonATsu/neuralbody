@@ -12,25 +12,19 @@ from plyfile import PlyData
 
 
 class Dataset(data.Dataset):
-    def __init__(self, data_root, subject, ann_file, split):
+    def __init__(self, data_root, subject, ann_file, split, mul=1.05):
         super(Dataset, self).__init__()
 
         self.data_root = data_root
         self.subject = subject
         self.split = split
+        self.mul = mul
 
         annots = np.load(ann_file, allow_pickle=True).item()
         # hard-coded for now!
-        idxs = np.load(os.path.join(data_root, f'{subject}_selected.npy'))[:10]
-        """
-        idxs = []
-        for i, im in enumerate(annots['ims']):
-            if 'Camera_0' in im:
-                idxs.append(i)
-        """
-        idxs = np.array(idxs)
         self.cams = annots['cams']
 
+        idxs = np.arange(len(annots['ims']))[:10]
         self.ims = np.array(annots['ims'])[idxs]
         self.cam_inds = idxs
 
@@ -62,9 +56,9 @@ class Dataset(data.Dataset):
 
     def get_mask(self, index):
         msk_path = os.path.join(self.data_root,
-                                self.ims[index].replace("ImageSequence", "Masks"))
+                                self.ims[index].replace("images", "masks"))
 
-        msk = imageio.imread(msk_path)[..., 0]
+        msk = imageio.imread(msk_path)
         msk = (msk >= 2).astype(np.uint8)
 
         border = 5
@@ -79,8 +73,8 @@ class Dataset(data.Dataset):
     def prepare_input(self, index):
         # read xyz, normal, color from the ply file
         vertices_path = os.path.join(self.data_root,
-                                     self.ims[index].replace("ImageSequence", "vertices")[:-4] + ".npy")
-        xyz = np.load(vertices_path).astype(np.float32)
+                                     self.ims[index].replace("images", "vertices")[:-4] + ".npy")
+        xyz = np.load(vertices_path).astype(np.float32) * self.mul
         nxyz = np.zeros_like(xyz).astype(np.float32)
 
         # obtain the original bounds for point sampling
@@ -96,7 +90,7 @@ class Dataset(data.Dataset):
 
         # transform smpl from the world coordinate to the smpl coordinate
         params_path = os.path.join(self.data_root,
-                                   self.ims[index].replace("ImageSequence", "smpl")[:-4] + ".npy")
+                                   self.ims[index].replace("images", "smpl")[:-4] + ".npy")
         params = np.load(params_path, allow_pickle=True).item()
         Rh = params['Rh']
         R = cv2.Rodrigues(Rh)[0].astype(np.float32)
