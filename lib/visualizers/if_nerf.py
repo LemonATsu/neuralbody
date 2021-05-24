@@ -8,6 +8,7 @@ import os
 class Visualizer:
     def visualize(self, output, batch):
         rgb_pred = output['rgb_map'].view(1, -1, 3)[0].detach().cpu().numpy()
+        acc_pred = output['acc_map'].view(1, -1)[0].detach().cpu().numpy()
         rgb_gt = batch['rgb'][0].detach().cpu().numpy()
         print('mse: {}'.format(np.mean((rgb_pred - rgb_gt) ** 2)))
 
@@ -30,6 +31,9 @@ class Visualizer:
         else:
             img_gt = batch['img_gt'][0].cpu().numpy()
 
+        acc = np.zeros((H, W))
+        acc[mask_at_box] = acc_pred
+
         '''
         _, (ax1, ax2) = plt.subplots(1, 2)
         ax1.imshow(img_pred)
@@ -39,10 +43,13 @@ class Visualizer:
         frame_root = 'data/result/if_nerf/{}/'.format(cfg.exp_name)
         index = batch['index']
 
-        pred_path = os.path.join(frame_root, 'pred')
-        gt_path = os.path.join(frame_root, 'gt')
+        assert cfg.render_name is not None
+        pred_path = os.path.join(frame_root, cfg.render_name, 'image')
+        acc_path = os.path.join(frame_root, cfg.render_name, 'acc')
+        gt_path = os.path.join(frame_root, cfg.render_name, 'gt')
         os.system('mkdir -p {}'.format(pred_path))
-        os.system('mkdir -p {}'.format(gt_path))
+        os.system('mkdir -p {}'.format(acc_path))
         imageio.imwrite(os.path.join(pred_path, "%d.png" % index), (img_pred * 255).astype(np.uint8))
-        imageio.imwrite(os.path.join(gt_path, "%d.png" % index), (img_gt * 255).astype(np.uint8))
+        imageio.imwrite(os.path.join(acc_path, "%d.png" % index), (acc * 255).astype(np.uint8))
+        #imageio.imwrite(os.path.join(gt_path, "%d.png" % index), (img_gt * 255).astype(np.uint8))
 

@@ -78,10 +78,12 @@ def run_visualize():
     import torch
     from lib.visualizers import make_visualizer
     from lib.networks.renderer import make_renderer
+    import os
 
     cfg.perturb = 0
+    cfg.render_name = args.render_name
 
-    network = make_network(cfg).cuda()
+    network = make_network(cfg)#.cuda()
     load_network(network,
                  cfg.trained_model_dir,
                  resume=cfg.resume,
@@ -89,14 +91,36 @@ def run_visualize():
     network.train()
 
     data_loader = make_data_loader(cfg, is_train=False)
-    renderer = make_renderer(cfg, network)
+    n_devices = 2
+
+    expand_k = ['index', 'bounds', 'R', 'Th',
+                'center', 'rot', 'trans', 'i',
+                'cam_ind', 'feature', 'coord', 'out_sh']
+    renderer = torch.nn.DataParallel(make_renderer(cfg, network)).cuda()
+    #renderer.set_save_mem(True)
     visualizer = make_visualizer(cfg)
     for batch in tqdm.tqdm(data_loader):
+        batch_cuda = {}
         for k in batch:
             if k != 'meta':
-                batch[k] = batch[k].cuda()
+                # TODO: ugly hack...
+                if k not in expand_k:
+                    sh = batch[k].shape
+                    if sh[-1] == 3:
+                        batch_cuda[k] = batch[k].view(-1, 3)
+                    else:
+                        batch_cuda[k] = batch[k].view(-1)
+                else:
+                    sh = batch[k].shape
+                    batch_cuda[k] = batch[k].expand(n_devices, *sh[1:])
+
+                batch_cuda[k] = batch_cuda[k].cuda()
+            else:
+                batch_cuda[k] = batch[k]
+
+
         with torch.no_grad():
-            output = renderer.render(batch)
+            output = renderer(batch_cuda)
             visualizer.visualize(output, batch)
 
 

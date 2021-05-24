@@ -51,7 +51,8 @@ surreal_hard = {
 
 # PerfCap
 weipeng_idx = [0, 50, 100, 150, 200, 250, 300, 350, 430, 480, 560,
-              600, 630, 660, 720, 760, 810, 1030, 1080, 1130]
+               600, 630, 660, 690, 720, 760, 810, 850, 900, 950,
+               1030, 1080, 1120]
 perfcap_weipeng = {
     'data_root': 'data/',
     'data_h5': 'data/MonoPerfCap/Weipeng_outdoor/Weipeng_outdoor_processed.h5',
@@ -64,7 +65,8 @@ perfcap_weipeng = {
 }
 
 nadia_idx = [0, 65, 100, 125, 230, 280, 410, 560, 600, 630, 730, 770,
-             830, 910, 1010, 1040, 1070, 1100, 1285, 1370]
+             830, 910, 1010, 1040, 1070, 1100, 1285, 1370, 1450, 1495,
+             1560, 1595]
 perfcap_nadia = {
     'data_root': 'data/',
     'data_h5': 'data/MonoPerfCap/Nadia_outdoor/Nadia_outdoor_processed.h5',
@@ -75,6 +77,34 @@ perfcap_nadia = {
                             center_cam=True),
     'bubble': set_dict(nadia_idx, n_step=30),
 }
+
+# Mixamo
+james_idx = [20, 78, 138, 118, 1149, 333, 3401, 2221, 4544]
+mixamo_james = {
+    'data_root': 'data/mixamo',
+    'data_h5': 'data/mixamo/James_processed.h5',
+    'ann_file': 'data/mixamo/James/annots.npy',
+    'idx_map': np.load('data/mixamo/James_selected.npy'),
+    'retarget': set_dict(james_idx, length=30, skip=1),
+    'bullet': set_dict(james_idx, n_bullet=10),
+    'interpolate': set_dict(james_idx, n_step=10, undo_rot=True,
+                            center_cam=True),
+    'bubble': set_dict(james_idx, n_step=30),
+}
+
+archer_idx = [158, 672, 374, 414, 1886, 2586, 2797, 4147, 4465]
+mixamo_archer = {
+    'data_root': 'data/mixamo',
+    'data_h5': 'data/mixamo/Archer_processed.h5',
+    'ann_file': 'data/mixamo/Archer/annots.npy',
+    'idx_map': np.load('data/mixamo/Archer_selected.npy'),
+    'retarget': set_dict(archer_idx, length=30, skip=1),
+    'bullet': set_dict(archer_idx, n_bullet=10),
+    'interpolate': set_dict(archer_idx, n_step=10, undo_rot=True,
+                            center_cam=True),
+    'bubble': set_dict(archer_idx, n_step=30),
+}
+
 
 RenderCatalog['h36m'] = {
     'S9': h36m_s9,
@@ -87,6 +117,11 @@ RenderCatalog['surreal'] = {
 RenderCatalog['perfcap'] = {
     'Weipeng_outdoor': perfcap_weipeng,
     'Nadia_outdoor': perfcap_nadia,
+}
+
+RenderCatalog['mixamo'] = {
+    'James': mixamo_james,
+    'Archer': mixamo_archer,
 }
 
 

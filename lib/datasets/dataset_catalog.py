@@ -211,6 +211,12 @@ class DatasetCatalog(object):
             'subject': '{}'.format(subject),
             'split': '{}'.format(cfg.render_type),
         },
+
+        'RENDER_SPIN_mixamo_Test': {
+            'data_root': 'mixamo',
+            'subject': '{}'.format(subject),
+            'split': '{}'.format(cfg.render_type),
+        },
     }
 
     @staticmethod

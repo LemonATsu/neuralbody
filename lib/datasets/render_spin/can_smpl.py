@@ -32,6 +32,11 @@ def load_bubble(data_root, annots, smpl_path_map, selected_idxs,
     shapes = shapes[:, None].repeat(n_step, 1).reshape(-1, 10)
     smpls = spin_smpl_to_nb(torch.FloatTensor(shapes), torch.FloatTensor(poses))
 
+    # center pose
+    smpls['vertices'] -= smpls['Th'].copy()
+    smpls['Th'] *= 0.
+
+
     K, R, T = cams['K'][selected_idxs], cams['R'][selected_idxs], cams['T'][selected_idxs]
 
     # center camera
@@ -97,7 +102,7 @@ def load_retarget(data_root, annots, smpl_path_map, selected_idxs, length=30, sk
 
 
 def load_bullettime(data_root, annots, smpl_path_map, selected_idxs, n_bullet=30,
-                    undo_rot=False, center_cam=False, center_kps=False):
+                    undo_rot=False, center_cam=True, center_kps=True):
 
     cams = annots['cams']
     ims = np.array(annots['ims'])[selected_idxs]
@@ -116,8 +121,9 @@ def load_bullettime(data_root, annots, smpl_path_map, selected_idxs, n_bullet=30
     if center_cam:
         shift_x = T[..., 0, -1].copy()
         shift_y = T[..., 1, -1].copy()
-        T[..., :2, 0] -= 0.
+        T[..., :2, 0] = 0.
 
+        print('CAM CENTERED')
 
     # rotate camera
     RT = np.concatenate([R, T], axis=-1)
@@ -132,17 +138,19 @@ def load_bullettime(data_root, annots, smpl_path_map, selected_idxs, n_bullet=30
     cams = {"K": K, "R": R, "T": T, "cam_inds": selected_idxs}
 
     if center_kps:
-        vertices[..., :] -= interp_smpls['Th']
+        smpls['vertices'] -= smpls['Th'].copy()
+        smpls['Th'] *= 0
+        print('VERT CENTERED')
     elif center_cam:
-        interp_smpls['vertices'][..., 0] -= shift_x[:, None]
-        interp_smpls['vertices'][..., 1] -= shift_y[:, None]
-        interp_smpls['Th'][..., 0] -= shift_x[:, None]
-        interp_smpls['Th'][..., 1] -= shift_y[:, None]
+        smpls['vertices'][..., 0] -= shift_x[:, None]
+        smpls['vertices'][..., 1] -= shift_y[:, None]
+        smpls['Th'][..., 0] -= shift_x[:, None]
+        smpls['Th'][..., 1] -= shift_y[:, None]
 
-    for k in interp_smpls:
+    for k in smpls:
         if k != 'smpl_model':
-            sh = interp_smpls[k].shape
-            interp_smpls[k] = interp_smpls[k][:, None].repeat(n_bullet, 1).reshape(-1, *sh[1:])
+            sh = smpls[k].shape
+            smpls[k] = smpls[k][:, None].repeat(n_bullet, 1).reshape(-1, *sh[1:])
     return ims, smpls, cams
 
 def load_interpolate(data_root, annots, smpl_path_map, selected_idxs, undo_rot=False,
@@ -195,12 +203,12 @@ def load_interpolate(data_root, annots, smpl_path_map, selected_idxs, undo_rot=F
     if center_cam:
         shift_x = T[..., 0, -1].copy()
         shift_y = T[..., 1, -1].copy()
-        T[..., :2, 0] -= 0.
+        T[..., :2, 0] = 0.
 
     if center_kps:
-        vertices[..., :] -= interp_smpls['Th']
-        import pdb; pdb.set_trace()
-        print()
+        interp_smpls['vertices'] -= interp_smpls['Th'].copy()
+        interp_smpls['Th'] *= 0.
+
     elif center_cam:
         interp_smpls['vertices'][..., 0] -= shift_x[:, None]
         interp_smpls['vertices'][..., 1] -= shift_y[:, None]
@@ -228,7 +236,8 @@ class Dataset(data.Dataset):
         annots = np.load(ann_file, allow_pickle=True).item()
 
         smpl_path_maps = {
-            'perfcap': ('images', 'smpl')
+            'perfcap': ('images', 'smpl'),
+            'mixamo': ('ImageSequence', 'smpl'),
         }
 
         self.data_root = catalog[subject]['data_root']
@@ -327,7 +336,7 @@ class Dataset(data.Dataset):
         msk = np.ones((cfg.H, cfg.W), dtype=np.uint8)
 
         cam_ind = self.cam_inds[index]
-        img = imageio.imread(os.path.join(self.data_root, self._ims[cam_ind])) / 255.
+        #img = imageio.imread(os.path.join(self.data_root, self._ims[cam_ind])) / 255.
         K = np.array(self.cams['K'][index])
         R = np.array(self.cams['R'][index])
         T = np.array(self.cams['T'][index])
@@ -335,6 +344,7 @@ class Dataset(data.Dataset):
         # reduce the image resolution by ratio
         H, W = int(cfg.H * cfg.ratio), int(cfg.W * cfg.ratio)
         msk = np.ones((H, W), dtype=np.uint8)
+        img = np.ones((H, W, 3), dtype=np.uint8)
         img = cv2.resize(img, (W, H), interpolation=cv2.INTER_AREA)
         #msk = cv2.resize(msk, (W, H), interpolation=cv2.INTER_NEAREST)
         if cfg.mask_bkgd:
