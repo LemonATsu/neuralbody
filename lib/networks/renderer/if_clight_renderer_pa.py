@@ -123,10 +123,10 @@ class Renderer(torch.nn.Module):
         return all_ret
 
     def render(self, batch):
-        ray_o = batch['ray_o']#[None]
-        ray_d = batch['ray_d']#[None]
-        near = batch['near']#[None]
-        far = batch['far']#[None]
+        ray_o = batch['ray_o'][None]
+        ray_d = batch['ray_d'][None]
+        near = batch['near'][None]
+        far = batch['far'][None]
         sh = ray_o.shape
 
         pts, z_vals = self.get_sampling_points(ray_o, ray_d, near, far)
@@ -135,7 +135,7 @@ class Renderer(torch.nn.Module):
         pts = self.pts_to_can_pts(pts, batch)
         # pts = self.transform_sampling_points(pts, batch)
 
-        ray_d0 = batch['ray_d']#[None]
+        ray_d0 = batch['ray_d'][None]
         viewdir = ray_d0 / torch.norm(ray_d0, dim=2, keepdim=True)
         viewdir = embedder.view_embedder(viewdir)
         viewdir = viewdir[:, :, None].repeat(1, 1, pts.size(2), 1).contiguous()
@@ -160,9 +160,9 @@ class Renderer(torch.nn.Module):
         ray_d = ray_d.view(-1, 3)
         rgb_map, disp_map, acc_map, weights, depth_map = raw2outputs(
             raw, z_vals.to(raw.device), ray_d.to(raw.device), cfg.raw_noise_std, cfg.white_bkgd)
-        rgb_map = rgb_map.view(*sh[:-1], -1)#[0]
-        acc_map = acc_map.view(*sh[:-1])#[0]
-        depth_map = depth_map.view(*sh[:-1])#[0]
+        rgb_map = rgb_map.view(*sh[:-1], -1)[0]
+        acc_map = acc_map.view(*sh[:-1])[0]
+        depth_map = depth_map.view(*sh[:-1])[0]
 
         ret = {'rgb_map': rgb_map, 'acc_map': acc_map, 'depth_map': depth_map}
 
