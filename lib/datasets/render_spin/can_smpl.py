@@ -19,6 +19,7 @@ def load_interpolate(data_root, annots, smpl_path_map, selected_idxs, undo_rot=F
     cams = annots['cams']
     # load and create vertice
     ims = np.array(annots['ims'])[selected_idxs]
+    print(ims)
     smpl_paths = [os.path.join(data_root, im.replace(*smpl_path_map)[:-4] + '.npy')
                   for im in ims]
     Rhs, Ths, poses, shapes = load_smpl_from_paths(smpl_paths)
@@ -121,11 +122,11 @@ class Dataset(data.Dataset):
         min_xyz = np.min(xyz, axis=0)
         max_xyz = np.max(xyz, axis=0)
         if cfg.big_box:
-            min_xyz -= 0.05
-            max_xyz += 0.05
+            min_xyz -= 0.15
+            max_xyz += 0.15
         else:
-            min_xyz[2] -= 0.05
-            max_xyz[2] += 0.05
+            min_xyz[2] -= 0.15
+            max_xyz[2] += 0.15
         can_bounds = np.stack([min_xyz, max_xyz], axis=0)
 
         # transform smpl from the world coordinate to the smpl coordinate
@@ -144,11 +145,11 @@ class Dataset(data.Dataset):
         min_xyz = np.min(xyz, axis=0)
         max_xyz = np.max(xyz, axis=0)
         if cfg.big_box:
-            min_xyz -= 0.05
-            max_xyz += 0.05
+            min_xyz -= 0.15
+            max_xyz += 0.15
         else:
-            min_xyz[2] -= 0.05
-            max_xyz[2] += 0.05
+            min_xyz[2] -= 0.15
+            max_xyz[2] += 0.15
         bounds = np.stack([min_xyz, max_xyz], axis=0)
 
         cxyz = xyz.astype(np.float32)
@@ -218,6 +219,7 @@ class Dataset(data.Dataset):
             'acc': acc,
             'mask_at_box': mask_at_box,
             'index': index,
+            #'img_gt': img,
         }
 
         R = cv2.Rodrigues(Rh)[0].astype(np.float32)

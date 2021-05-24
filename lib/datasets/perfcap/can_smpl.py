@@ -74,7 +74,7 @@ class Dataset(data.Dataset):
         # read xyz, normal, color from the ply file
         vertices_path = os.path.join(self.data_root,
                                      self.ims[index].replace("images", "vertices")[:-4] + ".npy")
-        xyz = np.load(vertices_path).astype(np.float32) * self.mul
+        xyz = np.load(vertices_path).astype(np.float32) #* self.mul
         nxyz = np.zeros_like(xyz).astype(np.float32)
 
         # obtain the original bounds for point sampling
@@ -94,7 +94,7 @@ class Dataset(data.Dataset):
         params = np.load(params_path, allow_pickle=True).item()
         Rh = params['Rh']
         R = cv2.Rodrigues(Rh)[0].astype(np.float32)
-        Th = params['Th'].astype(np.float32)
+        Th = params['Th'].astype(np.float32) #* self.mul
         xyz = np.dot(xyz - Th, R)
 
         # transformation augmentation
@@ -138,7 +138,7 @@ class Dataset(data.Dataset):
         K = np.array(self.cams['K'][cam_ind])
 
         R = np.array(self.cams['R'][cam_ind])
-        T = np.array(self.cams['T'][cam_ind])
+        T = np.array(self.cams['T'][cam_ind]) / self.mul
 
         # reduce the image resolution by ratio
         H, W = int(img.shape[0] * cfg.ratio), int(img.shape[1] * cfg.ratio)

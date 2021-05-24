@@ -4,9 +4,18 @@ from .nerf_net_utils import *
 from .. import embedder
 
 
-class Renderer:
-    def __init__(self, net):
+class Renderer(torch.nn.Module):
+    def __init__(self, net, save_mem=False):
+        super().__init__()
         self.net = net
+        self.save_mem = save_mem
+
+    def forward(self, batch):
+        return self.render(batch)
+
+
+    def set_save_mem(self, val):
+        self.save_mem = val
 
     def get_sampling_points(self, ray_o, ray_d, near, far):
         # calculate the steps for each ray
@@ -106,16 +115,18 @@ class Renderer:
             #     if k not in all_ret:
             #         all_ret[k] = []
             #     all_ret[k].append(ret[k])
+            if self.save_mem:
+                ret = ret.cpu()
             all_ret.append(ret)
         # all_ret = {k: torch.cat(all_ret[k], 0) for k in all_ret}
         all_ret = torch.cat(all_ret, 1)
         return all_ret
 
     def render(self, batch):
-        ray_o = batch['ray_o']
-        ray_d = batch['ray_d']
-        near = batch['near']
-        far = batch['far']
+        ray_o = batch['ray_o'][None]
+        ray_d = batch['ray_d'][None]
+        near = batch['near'][None]
+        far = batch['far'][None]
         sh = ray_o.shape
 
         pts, z_vals = self.get_sampling_points(ray_o, ray_d, near, far)
@@ -124,7 +135,7 @@ class Renderer:
         pts = self.pts_to_can_pts(pts, batch)
         # pts = self.transform_sampling_points(pts, batch)
 
-        ray_d0 = batch['ray_d']
+        ray_d0 = batch['ray_d'][None]
         viewdir = ray_d0 / torch.norm(ray_d0, dim=2, keepdim=True)
         viewdir = embedder.view_embedder(viewdir)
         viewdir = viewdir[:, :, None].repeat(1, 1, pts.size(2), 1).contiguous()
@@ -141,17 +152,17 @@ class Renderer:
             raw = self.net(sp_input, grid_coords, viewdir, light_pts)
         else:
             raw = self.batchify_rays(sp_input, grid_coords, viewdir, light_pts,
-                                     1024 * 32, None)
+                                     1024 * 64, None)
 
         # reshape to [num_rays, num_samples along ray, 4]
         raw = raw.reshape(-1, z_vals.size(2), 4)
         z_vals = z_vals.view(-1, z_vals.size(2))
         ray_d = ray_d.view(-1, 3)
         rgb_map, disp_map, acc_map, weights, depth_map = raw2outputs(
-            raw, z_vals, ray_d, cfg.raw_noise_std, cfg.white_bkgd)
-        rgb_map = rgb_map.view(*sh[:-1], -1)
-        acc_map = acc_map.view(*sh[:-1])
-        depth_map = depth_map.view(*sh[:-1])
+            raw, z_vals.to(raw.device), ray_d.to(raw.device), cfg.raw_noise_std, cfg.white_bkgd)
+        rgb_map = rgb_map.view(*sh[:-1], -1)[0]
+        acc_map = acc_map.view(*sh[:-1])[0]
+        depth_map = depth_map.view(*sh[:-1])[0]
 
         ret = {'rgb_map': rgb_map, 'acc_map': acc_map, 'depth_map': depth_map}
 
