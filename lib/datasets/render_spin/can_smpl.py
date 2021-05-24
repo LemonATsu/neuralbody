@@ -267,8 +267,6 @@ class Dataset(data.Dataset):
         if data_root == 'perfcap':
             if cfg.H == cfg.W:
                 self.cams['K'][..., 0, -1] = self.cams['K'][..., 1, -1]
-            import pdb; pdb.set_trace()
-            print()
 
 
     def prepare_input(self, index):
