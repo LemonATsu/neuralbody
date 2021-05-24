@@ -13,6 +13,51 @@ from plyfile import PlyData
 from .render_catalog import RenderCatalog
 from .spin_smpl_utils import spin_smpl_to_nb, load_smpl_from_paths
 
+def load_bullettime(data_root, annots, smpl_path_map, selected_idxs, n_bullet=30,
+                    undo_rot=False, center_cam=False, center_kps=False):
+
+    cams = annots['cams']
+    # load and create vertice
+    """
+    ims = np.array(annots['ims'])[selected_idxs]
+    print(ims)
+    smpl_paths = [os.path.join(data_root, im.replace(*smpl_path_map)[:-4] + '.npy')
+                  for im in ims]
+    Rhs, Ths, poses, shapes = load_smpl_from_paths(smpl_paths)
+    if undo_rot:
+        Rhs[:, :] = np.array([1.5708*2, 0., 0.], dtype=np.float32).reshape(1, 3)
+    poses = np.concatenate([Rhs[:, None], poses], axis=1)
+    """
+
+    K, R, T = cams['K'][selected_idxs], cams['R'][selected_idxs], cams['T'][selected_idxs]
+    K = K[:1].repeat(len(vertices), 0)
+    R = R[:1].repeat(len(vertices), 0)
+    T = T[:1].repeat(len(vertices), 0)
+    selected_idxs = np.array(selected_idxs[:1]).repeat(len(vertices), 0)
+
+    #cams = {"K": K, "R": R, "T": T, "cam_inds": selected_idxs}
+
+    if center_cam:
+        shift_x = T[..., 0, -1].copy()
+        shift_y = T[..., 1, -1].copy()
+        T[..., :2, 0] -= 0.
+    import pdb; pdb.set_trace()
+    print()
+
+    if center_kps:
+        vertices[..., :] -= interp_smpls['Th']
+        import pdb; pdb.set_trace()
+        print()
+    elif center_cam:
+        interp_smpls['vertices'][..., 0] -= shift_x[:, None]
+        interp_smpls['vertices'][..., 1] -= shift_y[:, None]
+        interp_smpls['Th'][..., 0] -= shift_x[:, None]
+        interp_smpls['Th'][..., 1] -= shift_y[:, None]
+
+
+
+
+
 def load_interpolate(data_root, annots, smpl_path_map, selected_idxs, undo_rot=False,
                      center_cam=False, center_kps=False, n_step=10):
 
@@ -66,6 +111,7 @@ def load_interpolate(data_root, annots, smpl_path_map, selected_idxs, undo_rot=F
         T[..., :2, 0] -= 0.
 
     if center_kps:
+        vertices[.., :] -= interp_smpls['Th']
         import pdb; pdb.set_trace()
         print()
     elif center_cam:
@@ -103,6 +149,10 @@ class Dataset(data.Dataset):
         if split == 'interpolate':
             ims, smpls, cams = load_interpolate(self.data_root, annots,
                                            smpl_path_maps[data_root], **render_args)
+        elif split == 'bullet':
+            ims, smpls, cams = load_bullettime(self.data_root, annots,
+                                           smpl_path_maps[data_root], **render_args)
+
         self._ims = ims
         self.ims = np.arange(len(smpls['vertices']))
         self.smpls = smpls
