@@ -206,11 +206,10 @@ class DatasetCatalog(object):
             'ann_file': 'data/h36m/{}/annots.npy'.format(subject),
             'split': 'test',
         },
-        'RENDER_SPIN_perfcap_interp_Test': {
+        'RENDER_SPIN_perfcap_Test': {
             'data_root': 'perfcap',
-            'subject': 'weipeng',
-            'split': 'interpolate',
-            'center_kps': False,
+            'subject': '{}'.format(subject),
+            'split': '{}'.format(cfg.render_type),
         },
     }
 

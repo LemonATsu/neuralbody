@@ -119,13 +119,16 @@ cfg.vis = 'mesh'
 cfg.body_sample_ratio = 0.5
 cfg.face_sample_ratio = 0.
 
+# render
+cfg.render_type = 'retarget'
+
 
 def parse_cfg(cfg, args):
     if len(cfg.task) == 0:
         raise ValueError('task must be specified')
 
     # assign the gpus
-    os.environ['CUDA_VISIBLE_DEVICES'] = ', '.join([str(gpu) for gpu in cfg.gpus])
+    # os.environ['CUDA_VISIBLE_DEVICES'] = ', '.join([str(gpu) for gpu in cfg.gpus])
     cfg.trained_model_dir = os.path.join(cfg.trained_model_dir, cfg.task, cfg.exp_name)
     cfg.record_dir = os.path.join(cfg.record_dir, cfg.task, cfg.exp_name)
     cfg.result_dir = os.path.join(cfg.result_dir, cfg.task, cfg.exp_name)
@@ -146,6 +149,7 @@ parser.add_argument("--cfg_file", default="configs/default.yaml", type=str)
 parser.add_argument('--test', action='store_true', dest='test', default=False)
 parser.add_argument("--type", type=str, default="")
 parser.add_argument('--det', type=str, default='')
+parser.add_argument("--render_name", type=str, default=None)
 parser.add_argument('--local_rank', type=int, default=0)
 parser.add_argument('--launcher', type=str, default='none', choices=['none', 'pytorch'])
 parser.add_argument("opts", default=None, nargs=argparse.REMAINDER)

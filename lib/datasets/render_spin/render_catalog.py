@@ -24,6 +24,7 @@ h36m_s9 = {
     'interpolate': set_dict(s9_idx, n_step=10, undo_rot=True,
                             center_cam=True),
 }
+
 s11_idx = [213, 656, 904, 1559, 1815, 2200, 2611, 2700]
 h36m_s11 = {
     'data_h5': 'data/h36m/S11_processed_deeplab_crop3.h5',
@@ -59,6 +60,7 @@ perfcap_weipeng = {
     'bullet': set_dict(weipeng_idx),
     'interpolate': set_dict(weipeng_idx, n_step=10, undo_rot=True,
                             center_cam=True),
+    'bubble': set_dict(weipeng_idx, n_step=30),
 }
 
 nadia_idx = [0, 65, 100, 125, 230, 280, 410, 560, 600, 630, 730, 770,
@@ -71,6 +73,7 @@ perfcap_nadia = {
     'bullet': set_dict(nadia_idx),
     'interpolate': set_dict(nadia_idx, n_step=10, undo_rot=True,
                             center_cam=True),
+    'bubble': set_dict(nadia_idx, n_step=30),
 }
 
 RenderCatalog['h36m'] = {
@@ -82,8 +85,8 @@ RenderCatalog['surreal'] = {
     'hard': surreal_hard,
 }
 RenderCatalog['perfcap'] = {
-    'weipeng': perfcap_weipeng,
-    'nadia': perfcap_nadia,
+    'Weipeng_outdoor': perfcap_weipeng,
+    'Nadia_outdoor': perfcap_nadia,
 }
 
 

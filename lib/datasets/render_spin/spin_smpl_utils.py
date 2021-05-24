@@ -1,8 +1,50 @@
+import math
 import torch
 import numpy as np
 from smplx import SMPL as smpl
 
 SMPL_JOINT_MAPPER = lambda joints: joints[:, [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23]]
+
+def to_homo(mat):
+    row = np.array([[0, 0, 0, 1.]], dtype=np.float32)
+    if len(mat.shape) == 3:
+        row = row.reshape(1, 1, 4).repeat(len(mat), 0)
+    return np.concatenate([mat, row], axis=1)
+
+
+
+
+def rotate_x(phi):
+    cos = np.cos(phi)
+    sin = np.sin(phi)
+    return np.array([[1,   0,    0, 0],
+                     [0, cos, -sin, 0],
+                     [0, sin,  cos, 0],
+                     [0,   0,    0, 1]], dtype=np.float32)
+
+def rotate_z(psi):
+    cos = np.cos(psi)
+    sin = np.sin(psi)
+    return np.array([[cos, -sin, 0, 0],
+                     [sin,  cos, 0, 0],
+                     [0,      0, 1, 0],
+                     [0,      0, 0, 1]], dtype=np.float32)
+def rotate_y(theta):
+    cos = np.cos(theta)
+    sin = np.sin(theta)
+    return np.array([[cos,   0, -sin, 0],
+                     [0,     1,    0, 0],
+                     [sin,   0,  cos, 0],
+                     [0,   0,      0, 1]], dtype=np.float32)
+
+def generate_bullet_time(c2w, n_views=20):
+
+    y_angles = -np.linspace(0, math.radians(360), n_views+1)[:-1]
+    c2ws = []
+    for a in y_angles:
+        c = rotate_y(a) @ c2w
+        c2ws.append(c)
+    return np.array(c2ws)
 
 def load_smpl_from_paths(smpl_paths):
 
