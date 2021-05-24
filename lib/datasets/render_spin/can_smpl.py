@@ -111,7 +111,7 @@ def load_interpolate(data_root, annots, smpl_path_map, selected_idxs, undo_rot=F
         T[..., :2, 0] -= 0.
 
     if center_kps:
-        vertices[.., :] -= interp_smpls['Th']
+        vertices[..., :] -= interp_smpls['Th']
         import pdb; pdb.set_trace()
         print()
     elif center_cam:
