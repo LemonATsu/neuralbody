@@ -42,7 +42,7 @@ def load_bubble(data_root, annots, smpl_path_map, selected_idxs,
     # center camera
     shift_x = T[..., 0, -1].copy()
     shift_y = T[..., 1, -1].copy()
-    T[..., :2, 0] -= 0.
+    T[..., :2, 0] = 0.
     z_t = z_t * T[0,  2, -1]
 
     # set motions
