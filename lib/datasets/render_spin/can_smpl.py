@@ -254,6 +254,10 @@ class Dataset(data.Dataset):
         elif split == 'bubble':
             ims, smpls, cams = load_bubble(self.data_root, annots,
                                            smpl_path_maps[data_root], **render_args)
+        elif split == 'all':
+            ims, smpls, cams = load_retarget(self.data_root, annots,
+                                             smpl_path_maps[data_root],
+                                             catalog[subject]['idx_map'], length=1)
 
         self._ims = ims
         self.ims = np.arange(len(smpls['vertices']))

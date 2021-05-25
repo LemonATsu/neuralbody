@@ -57,11 +57,13 @@ perfcap_weipeng = {
     'data_root': 'data/',
     'data_h5': 'data/MonoPerfCap/Weipeng_outdoor/Weipeng_outdoor_processed.h5',
     'ann_file': 'data/MonoPerfCap/Weipeng_outdoor/annots.npy',
+    'idx_map': np.arange(1151),
     'retarget': set_dict(weipeng_idx, length=30, skip=1),
     'bullet': set_dict(weipeng_idx),
     'interpolate': set_dict(weipeng_idx, n_step=10, undo_rot=True,
                             center_cam=True),
     'bubble': set_dict(weipeng_idx, n_step=30),
+    'all': set_dict(np.arange(1151)),
 }
 
 nadia_idx = [0, 65, 100, 125, 230, 280, 410, 560, 600, 630, 730, 770,
@@ -71,11 +73,13 @@ perfcap_nadia = {
     'data_root': 'data/',
     'data_h5': 'data/MonoPerfCap/Nadia_outdoor/Nadia_outdoor_processed.h5',
     'ann_file': 'data/MonoPerfCap/Nadia_outdoor/annots.npy',
+    'idx_map': np.arange(1635),
     'retarget': set_dict(nadia_idx, length=30, skip=1),
     'bullet': set_dict(nadia_idx),
     'interpolate': set_dict(nadia_idx, n_step=10, undo_rot=True,
                             center_cam=True),
     'bubble': set_dict(nadia_idx, n_step=30),
+    'all': set_dict(np.arange(1635)),
 }
 
 # Mixamo
@@ -90,6 +94,7 @@ mixamo_james = {
     'interpolate': set_dict(james_idx, n_step=10, undo_rot=True,
                             center_cam=True),
     'bubble': set_dict(james_idx, n_step=30),
+    'all': set_dict(np.load('data/mixamo/James_selected.npy')),
 }
 
 archer_idx = [158, 672, 374, 414, 1886, 2586, 2797, 4147, 4465]
@@ -103,6 +108,7 @@ mixamo_archer = {
     'interpolate': set_dict(archer_idx, n_step=10, undo_rot=True,
                             center_cam=True),
     'bubble': set_dict(archer_idx, n_step=30),
+    'all': set_dict(np.load('data/mixamo/Archer_selected.npy')),
 }
 
 
