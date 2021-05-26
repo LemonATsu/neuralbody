@@ -3,8 +3,8 @@ gpus: [0]
 
 train_dataset_module: 'lib.datasets.mixamo.can_smpl'
 train_dataset_path: 'lib/datasets/mixamo/can_smpl.py'
-test_dataset_module: 'lib.datasets.mixamo.can_smpl'
-test_dataset_path: 'lib/datasets/mixamo/can_smpl.py'
+test_dataset_module: 'lib.datasets.mixamo.can_smpl_test'
+test_dataset_path: 'lib/datasets/mixamo/can_smpl_test.py'
 
 network_module: 'lib.networks.latent_xyzc'
 network_path: 'lib/networks/latent_xyzc.py'
@@ -34,7 +34,7 @@ train:
         type: 'exponential'
         gamma: 0.1
         decay_epochs: 1000
-    num_workers: 6
+    num_workers: 8
 
 test:
     dataset: Mixamo_James_Test
@@ -43,7 +43,7 @@ test:
     collator: ''
 
 ep_iter: 700
-save_ep: 1000
+save_ep: 100
 eval_ep: 1000
 
 # training options

@@ -15,24 +15,32 @@ def set_dict(selected_idxs, **kwargs):
 # H36M
 # TODO: currently use the same set of idx for one dataset.
 #       can set different index for different things
-s9_idx = [121, 1000, 1059, 1600, 1815, 3014, 3702, 4980]
+s9_idx = [121, 500, 1000, 1059, 1300, 1600, 1815, 3014, 3702, 4980]
 h36m_s9 = {
+    'data_root': 'data/h36m',
     'data_h5': 'data/h36m/S9_processed_deeplab_crop3.h5',
+    'ann_file': 'data/h36m/S9/annots.npy',
+    'refined': 'neurips21_ckpt/trained/ours/h36m/s9_sub64_500k.tar',
     'retarget': set_dict(s9_idx, length=5),
     'bullet': set_dict(s9_idx, undo_rot=True,
                        center_cam=True),
     'interpolate': set_dict(s9_idx, n_step=10, undo_rot=True,
                             center_cam=True),
+    'bubble': set_dict(s9_idx, n_step=30),
 }
 
-s11_idx = [213, 656, 904, 1559, 1815, 2200, 2611, 2700]
+s11_idx = [213, 656, 904, 1559, 1815, 2200, 2611, 2700, 3110, 3440, 3605]
 h36m_s11 = {
+    'data_root': 'data/h36m',
     'data_h5': 'data/h36m/S11_processed_deeplab_crop3.h5',
+    'ann_file': 'data/h36m/S11/annots.npy',
+    'refined': 'neurips21_ckpt/trained/ours/h36m/s11_sub64_500k.tar',
     'retarget': set_dict(s11_idx, length=5),
     'bullet': set_dict(s11_idx, undo_rot=True,
                        center_cam=True),
     'interpolate': set_dict(s11_idx, n_step=10, undo_rot=True,
                             center_cam=True),
+    'bubble': set_dict(s11_idx, n_step=30),
 }
 
 # SURREAL
@@ -57,8 +65,9 @@ perfcap_weipeng = {
     'data_root': 'data/',
     'data_h5': 'data/MonoPerfCap/Weipeng_outdoor/Weipeng_outdoor_processed.h5',
     'ann_file': 'data/MonoPerfCap/Weipeng_outdoor/annots.npy',
+    'refined': 'neurips21_ckpt/trained/ours/perfcap/weipeng_tv_500k.tar',
     'idx_map': np.arange(1151),
-    'retarget': set_dict(weipeng_idx, length=30, skip=1),
+    'retarget': set_dict(weipeng_idx, length=30, skip=2),
     'bullet': set_dict(weipeng_idx),
     'interpolate': set_dict(weipeng_idx, n_step=10, undo_rot=True,
                             center_cam=True),
@@ -73,8 +82,9 @@ perfcap_nadia = {
     'data_root': 'data/',
     'data_h5': 'data/MonoPerfCap/Nadia_outdoor/Nadia_outdoor_processed.h5',
     'ann_file': 'data/MonoPerfCap/Nadia_outdoor/annots.npy',
+    'refined': 'neurips21_ckpt/trained/ours/perfcap/nadia_tv_500k.tar',
     'idx_map': np.arange(1635),
-    'retarget': set_dict(nadia_idx, length=30, skip=1),
+    'retarget': set_dict(nadia_idx, length=30, skip=2),
     'bullet': set_dict(nadia_idx),
     'interpolate': set_dict(nadia_idx, n_step=10, undo_rot=True,
                             center_cam=True),
@@ -89,7 +99,8 @@ mixamo_james = {
     'data_h5': 'data/mixamo/James_processed.h5',
     'ann_file': 'data/mixamo/James/annots.npy',
     'idx_map': np.load('data/mixamo/James_selected.npy'),
-    'retarget': set_dict(james_idx, length=30, skip=1),
+    'refined': 'neurips21_ckpt/trained/ours/mixamo/james_tv_500k.tar',
+    'retarget': set_dict(james_idx, length=30, skip=2),
     'bullet': set_dict(james_idx, n_bullet=10),
     'interpolate': set_dict(james_idx, n_step=10, undo_rot=True,
                             center_cam=True),
@@ -103,7 +114,8 @@ mixamo_archer = {
     'data_h5': 'data/mixamo/Archer_processed.h5',
     'ann_file': 'data/mixamo/Archer/annots.npy',
     'idx_map': np.load('data/mixamo/Archer_selected.npy'),
-    'retarget': set_dict(archer_idx, length=30, skip=1),
+    'refined': 'neurips21_ckpt/trained/ours/mixamo/archer_tv_500k.tar',
+    'retarget': set_dict(archer_idx, length=30, skip=2),
     'bullet': set_dict(archer_idx, n_bullet=10),
     'interpolate': set_dict(archer_idx, n_step=10, undo_rot=True,
                             center_cam=True),

@@ -3,8 +3,8 @@ gpus: [0]
 
 train_dataset_module: 'lib.datasets.perfcap.can_smpl'
 train_dataset_path: 'lib/datasets/perfcap/can_smpl.py'
-test_dataset_module: 'lib.datasets.perfcap.can_smpl'
-test_dataset_path: 'lib/datasets/perfcap/can_smpl.py'
+test_dataset_module: 'lib.datasets.perfcap.can_smpl_test'
+test_dataset_path: 'lib/datasets/perfcap/can_smpl_test.py'
 
 network_module: 'lib.networks.latent_xyzc'
 network_path: 'lib/networks/latent_xyzc.py'
@@ -34,7 +34,7 @@ train:
         type: 'exponential'
         gamma: 0.1
         decay_epochs: 1000
-    num_workers: 6
+    num_workers: 8
 
 test:
     dataset: Perfcap_Nadia_outdoor_Test

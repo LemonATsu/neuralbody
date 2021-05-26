@@ -12,12 +12,30 @@ from lib.utils.if_nerf import if_nerf_data_utils as if_nerf_dutils
 from plyfile import PlyData
 from .render_catalog import RenderCatalog
 from .spin_smpl_utils import spin_smpl_to_nb, load_smpl_from_paths, to_homo, generate_bullet_time
-from .spin_smpl_utils import rotate_x, rotate_y
+from .spin_smpl_utils import rotate_x, rotate_y, nerf_bones_to_smpl, rot_to_axisang
 
 # NOTE: FROM OUR SYSTEM - Y flipped, X off by 90 deg
+shape_list = {
+    'weipeng': 'data/MonoPerfCap/Weipeng_outdoor/Weipeng_outdoor/smpl/frame_c_0_f_1300.npy',
+    'nadia': 'data/MonoPerfCap/Nadia_outdoor/Nadia_outdoor/smpl/frame_1934.npy',
+    'S9': 'data/h36m/S9/Directions-1/smpl/54138969/img_002305.npy',
+    'S11': 'data/h36m/S11/Directions-1/smpl/54138969/img_001537.npy',
+    'archer': 'data/mixamo/Archer/Thriller/Camera_0/smpl/Image0650.npy',
+    'james': 'data/mixamo/James/Thriller/Camera_0/smpl/Image0650.npy',
+}
+def find_idxs_with_map(selected_idxs, idx_map):
+    if idx_map is None:
+        return selected_idxs
+    match_idxs = []
+    for sel in selected_idxs:
+        for i, m in enumerate(idx_map):
+            if m == sel:
+                match_idxs.append(i)
+                break
+    return np.array(match_idxs)
 
 def load_bubble(data_root, annots, smpl_path_map, selected_idxs,
-                x_deg=15., y_deg=25., z_t=0.1, n_step=5):
+                x_deg=15., y_deg=25., z_t=0.1, n_step=5, refined=None):
     x_rad = x_deg * np.pi / 180.
     y_rad = y_deg * np.pi / 180.
 
@@ -81,7 +99,7 @@ def load_bubble(data_root, annots, smpl_path_map, selected_idxs,
 
 
 def load_retarget(data_root, annots, smpl_path_map, selected_idxs, length=30, skip=1,
-                  center_kps=False):
+                  center_kps=False, refined=None, idx_map=None):
     l = length
     selected_idxs = np.concatenate([np.arange(s, s+l)[::skip] for s in selected_idxs])
 
@@ -90,19 +108,29 @@ def load_retarget(data_root, annots, smpl_path_map, selected_idxs, length=30, sk
 
     smpl_paths = [os.path.join(data_root, im.replace(*smpl_path_map)[:-4] + '.npy')
                   for im in ims]
-    Rhs, Ths, poses, shapes = load_smpl_from_paths(smpl_paths)
-    poses = np.concatenate([Rhs[:, None], poses], axis=1)
-    smpls = spin_smpl_to_nb(torch.FloatTensor(shapes), torch.FloatTensor(poses))
-
     K, R, T = cams['K'][selected_idxs], cams['R'][selected_idxs], cams['T'][selected_idxs]
     cams = {"K": K, "R": R, "T": T, "cam_inds": selected_idxs}
+    if refined is not None:
+        selected_idxs = find_idxs_with_map(selected_idxs, idx_map)
+        shapes = refined[1].item()['shapes']
+        poses = torch.FloatTensor(refined[0])
+        poses = nerf_bones_to_smpl(poses)
+        B, J, _, _ = poses.shape
+        poses = poses.reshape(-1, 3, 3)
+        poses = rot_to_axisang(poses).reshape(B, J, 3)
+        poses = poses[selected_idxs]
+    else:
+        Rhs, Ths, poses, shapes = load_smpl_from_paths(smpl_paths)
+        poses = np.concatenate([Rhs[:, None], poses], axis=1)
+    smpls = spin_smpl_to_nb(torch.FloatTensor(shapes), torch.FloatTensor(poses))
+
 
     return ims, smpls, cams
 
 
 
 def load_bullettime(data_root, annots, smpl_path_map, selected_idxs, n_bullet=30,
-                    undo_rot=False, center_cam=True, center_kps=True):
+                    undo_rot=False, center_cam=True, center_kps=True, refined=None):
 
     cams = annots['cams']
     ims = np.array(annots['ims'])[selected_idxs]
@@ -154,7 +182,7 @@ def load_bullettime(data_root, annots, smpl_path_map, selected_idxs, n_bullet=30
     return ims, smpls, cams
 
 def load_interpolate(data_root, annots, smpl_path_map, selected_idxs, undo_rot=False,
-                     center_cam=False, center_kps=False, n_step=10):
+                     center_cam=False, center_kps=False, n_step=10, refined=None):
 
     cams = annots['cams']
     # load and create vertice
@@ -238,9 +266,26 @@ class Dataset(data.Dataset):
         smpl_path_maps = {
             'perfcap': ('images', 'smpl'),
             'mixamo': ('ImageSequence', 'smpl'),
+            'h36m': ('imageSequence', 'smpl'),
         }
 
         self.data_root = catalog[subject]['data_root']
+
+        refined = None
+        if cfg.render_refined:
+            shape_file_maps = {
+                'S9': 'S9',
+                'S11': 'S11',
+                'James': 'James',
+                'Archer': 'Archer',
+                'Weipeng_outdoor': 'weipeng',
+                'Nadia_outdoor': 'nadia',
+            }
+            refined = np.load(f'refined_poses/{subject}_poses.npy')
+            original_smpl = np.load(shape_list[cfg.original_subject], allow_pickle=True)
+            refined = (refined, original_smpl)
+
+        render_args['refined'] = refined
 
         if split == 'interpolate':
             ims, smpls, cams = load_interpolate(self.data_root, annots,
@@ -249,8 +294,13 @@ class Dataset(data.Dataset):
             ims, smpls, cams = load_bullettime(self.data_root, annots,
                                            smpl_path_maps[data_root], **render_args)
         elif split == 'retarget':
+            if data_root == 'mixamo':
+                idx_map = catalog[subject]['idx_map']
+            else:
+                idx_map=None
             ims, smpls, cams = load_retarget(self.data_root, annots,
-                                           smpl_path_maps[data_root], **render_args)
+                                             smpl_path_maps[data_root],
+                                             idx_map=idx_map,**render_args)
         elif split == 'bubble':
             ims, smpls, cams = load_bubble(self.data_root, annots,
                                            smpl_path_maps[data_root], **render_args)
@@ -275,7 +325,7 @@ class Dataset(data.Dataset):
 
     def prepare_input(self, index):
         # read xyz, normal, color from the ply file
-        xyz = self.smpls['vertices'][index] * self.mul
+        xyz = self.smpls['vertices'][index] #* self.mul
         nxyz = np.zeros_like(xyz).astype(np.float32)
 
         # obtain the original bounds for point sampling
@@ -347,7 +397,7 @@ class Dataset(data.Dataset):
         #img = imageio.imread(os.path.join(self.data_root, self._ims[cam_ind])) / 255.
         K = np.array(self.cams['K'][index])
         R = np.array(self.cams['R'][index])
-        T = np.array(self.cams['T'][index])
+        T = np.array(self.cams['T'][index]) / self.mul
 
         # reduce the image resolution by ratio
         H, W = int(cfg.H * cfg.ratio), int(cfg.W * cfg.ratio)
@@ -394,6 +444,8 @@ class Dataset(data.Dataset):
 
         R = cv2.Rodrigues(Rh)[0].astype(np.float32)
         i = index #// self.num_cams
+        if cfg.selected_framecode >= 0:
+            i = cfg.selected_framecode
         meta = {
             'bounds': bounds,
             'R': R,

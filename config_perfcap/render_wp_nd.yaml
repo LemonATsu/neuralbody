@@ -1,15 +1,15 @@
 task: 'if_nerf'
 gpus: [0]
 
-train_dataset_module: 'lib.datasets.perfcap.can_smpl'
-train_dataset_path: 'lib/datasets/perfcap/can_smpl.py'
-test_dataset_module: 'lib.datasets.perfcap.can_smpl_test'
-test_dataset_path: 'lib/datasets/perfcap/can_smpl_test.py'
+train_dataset_module: 'lib.datasets.render_spin.can_smpl'
+train_dataset_path: 'lib/datasets/render_spin/can_smpl.py'
+test_dataset_module: 'lib.datasets.render_spin.can_smpl_test'
+test_dataset_path: 'lib/datasets/render_spin/can_smpl.py'
 
 network_module: 'lib.networks.latent_xyzc'
 network_path: 'lib/networks/latent_xyzc.py'
-renderer_module: 'lib.networks.renderer.if_clight_renderer'
-renderer_path: 'lib/networks/renderer/if_clight_renderer.py'
+renderer_module: 'lib.networks.renderer.if_clight_renderer_pa'
+renderer_path: 'lib/networks/renderer/if_clight_renderer_pa.py'
 
 trainer_module: 'lib.train.trainers.if_nerf_clight'
 trainer_path: 'lib/train/trainers/if_nerf_clight.py'
@@ -21,10 +21,10 @@ visualizer_module: 'lib.visualizers.if_nerf'
 visualizer_path: 'lib/visualizers/if_nerf.py'
 
 human: 313
-subject: 'Weipeng_outdoor'
+subject: 'Nadia_outdoor'
 
 train:
-    dataset: Perfcap_Weipeng_outdoor_Train
+    dataset: RENDER_SPIN_perfcap_Test
     batch_size: 1
     collator: ''
     lr: 5e-4
@@ -34,10 +34,10 @@ train:
         type: 'exponential'
         gamma: 0.1
         decay_epochs: 1000
-    num_workers: 8
+    num_workers: 0
 
 test:
-    dataset: Perfcap_Weipeng_outdoor_Test
+    dataset: RENDER_SPIN_perfcap_Test
     sampler: 'FrameSampler'
     batch_size: 1
     collator: ''
@@ -63,7 +63,11 @@ precrop_frac: 0.5
 point_feature: 6
 
 # rendering options
+render_refined: True
+original_subject: 'weipeng'
+render_type: 'retarget'
 use_viewdirs: True
+selected_framecode: 10
 i_embed: 0
 xyz_res: 10
 view_res: 4
@@ -77,7 +81,7 @@ near: 1
 far: 3
 
 perturb: 1
-white_bkgd: False
+white_bkgd: True
 
 render_views: 50
 

@@ -217,6 +217,11 @@ class DatasetCatalog(object):
             'subject': '{}'.format(subject),
             'split': '{}'.format(cfg.render_type),
         },
+        'RENDER_SPIN_H36M_Test': {
+            'data_root': 'h36m',
+            'subject': '{}'.format(subject),
+            'split': '{}'.format(cfg.render_type),
+        },
     }
 
     @staticmethod

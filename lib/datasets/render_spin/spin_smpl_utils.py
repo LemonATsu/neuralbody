@@ -2,6 +2,7 @@ import math
 import torch
 import numpy as np
 from smplx import SMPL as smpl
+from torchgeometry import rotation_matrix_to_angle_axis
 
 SMPL_JOINT_MAPPER = lambda joints: joints[:, [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23]]
 
@@ -114,6 +115,10 @@ def axisang_to_rot(axisang):
     """
     return rot
 
+def rot_to_axisang(rot):
+    zeros = torch.zeros(rot.shape[0], 3, 1).to(rot.device)
+    rot = torch.cat([rot, zeros], dim=-1)
+    return rotation_matrix_to_angle_axis(rot)
 
 @torch.no_grad()
 def spin_smpl_to_nb(shapes, poses, gender="NEUTRAL", mapper=SMPL_JOINT_MAPPER):
@@ -154,3 +159,16 @@ def spin_smpl_to_nb(shapes, poses, gender="NEUTRAL", mapper=SMPL_JOINT_MAPPER):
     return {"vertices": vertices.numpy(),
             "Rh": Rh.numpy(), "Th": Th.numpy(),
             "shapes": shapes.numpy(), "poses": poses.numpy(), "smpl_model": body_model}
+
+def nerf_bones_to_smpl(bones):
+    # undo local transformation
+    bones = torch.cat([bones[..., 0:1], -bones[..., 2:3], bones[..., 1:2]], dim=-1)
+    rots = axisang_to_rot(bones.view(-1, 3)).view(*bones.shape[:2], 3, 3)
+    # undo global transformation
+    root_rot = torch.tensor([[1., 0., 0.],
+                             [0., 0.,-1.],
+                             [0., 1., 0.]]).to(bones.device)
+    root_rot = root_rot.expand(len(rots), 3, 3)
+    rots[:, 0] = root_rot @ rots[:, 0]
+    return rots
+

@@ -34,7 +34,7 @@ train:
         type: 'exponential'
         gamma: 0.1
         decay_epochs: 1000
-    num_workers: 6
+    num_workers: 8
 
 test:
     dataset: Mixamo_Archer_Test
@@ -43,7 +43,7 @@ test:
     collator: ''
 
 ep_iter: 700
-save_ep: 1000
+save_ep: 100
 eval_ep: 1000
 
 # training options

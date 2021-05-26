@@ -121,6 +121,9 @@ cfg.face_sample_ratio = 0.
 
 # render
 cfg.render_type = 'retarget'
+cfg.render_refined = False
+cfg.original_subject = ''
+cfg.selected_framecode = -1
 
 
 def parse_cfg(cfg, args):
