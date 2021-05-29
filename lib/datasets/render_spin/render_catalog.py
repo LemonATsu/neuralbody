@@ -15,7 +15,7 @@ def set_dict(selected_idxs, **kwargs):
 # H36M
 # TODO: currently use the same set of idx for one dataset.
 #       can set different index for different things
-s9_idx = [121, 500, 1000, 1059, 1300, 1600, 1815, 3014, 3702, 4980]
+s9_idx = [121, 500, 1000, 1059, 1300, 1600, 1815, 2400, 3014, 3702, 4980]
 h36m_s9 = {
     'data_root': 'data/h36m',
     'data_h5': 'data/h36m/S9_processed_deeplab_crop3.h5',
@@ -90,6 +90,23 @@ perfcap_nadia = {
                             center_cam=True),
     'bubble': set_dict(nadia_idx, n_step=30),
     'all': set_dict(np.arange(1635)),
+}
+
+# Mixamo
+james_idx = [20, 78, 138, 118, 1149, 333, 3401, 2221, 4544]
+#james_idx = [78, 138, 118, 1149, 333, 3401, 2221, 4544]
+mixamo_james = {
+    'data_root': 'data/mixamo',
+    'data_h5': 'data/mixamo/James_processed.h5',
+    'ann_file': 'data/mixamo/James/annots.npy',
+    'idx_map': np.load('data/mixamo/James_selected.npy'),
+    'refined': 'neurips21_ckpt/trained/ours/mixamo/james_tv_500k.tar',
+    'retarget': set_dict(james_idx, length=30, skip=2),
+    'bullet': set_dict(james_idx, n_bullet=10),
+    'interpolate': set_dict(james_idx, n_step=10, undo_rot=True,
+                            center_cam=True),
+    'bubble': set_dict(james_idx, n_step=30),
+    'all': set_dict(np.load('data/mixamo/James_selected.npy')),
 }
 
 # Mixamo

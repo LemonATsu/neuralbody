@@ -16,13 +16,11 @@ class Visualizer:
         H, W = int(cfg.H * cfg.ratio), int(cfg.W * cfg.ratio)
         mask_at_box = mask_at_box.reshape(H, W)
 
-        """
-        if cf.white_bkgd:
+        if cfg.white_bkgd:
             img_pred = np.ones((H, W, 3))
         else:
             img_pred = np.zeros((H, W, 3))
-        """
-        img_pred = np.zeros((H, W, 3))
+        #img_pred = np.zeros((H, W, 3))
         img_pred[mask_at_box] = rgb_pred
 
         if not 'img_gt' in batch:

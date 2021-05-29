@@ -67,7 +67,8 @@ def load_bubble(data_root, annots, smpl_path_map, selected_idxs,
     motions = np.linspace(0., 2 * np.pi, n_step, endpoint=True)
     x_motions = (np.cos(motions) - 1.) * x_rad
     y_motions = -np.sin(motions) * y_rad
-    z_trans = (np.sin(motions) + 1.) * z_t
+    z_trans = -(np.sin(motions) + 1.) * z_t
+    print("NEG TRANS")
 
     cam_motions = []
     for x_motion, y_motion in zip(x_motions, y_motions):
@@ -129,7 +130,7 @@ def load_retarget(data_root, annots, smpl_path_map, selected_idxs, length=30, sk
 
 
 
-def load_bullettime(data_root, annots, smpl_path_map, selected_idxs, n_bullet=30,
+def load_bullettime(data_root, annots, smpl_path_map, selected_idxs, n_bullet=10,
                     undo_rot=False, center_cam=True, center_kps=True, refined=None):
 
     cams = annots['cams']

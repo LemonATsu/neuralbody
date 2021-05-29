@@ -27,7 +27,25 @@ class Dataset(data.Dataset):
             if 'Camera_0' in im:
                 idxs.append(i)
         """
-        idxs = np.arange(len(annots['ims']))
+        #if split == 'train':
+        if split == 'train_val':
+            idxs = []
+
+            val_sets = ['Posing-', 'Walking-', 'Greeting-']
+            for i, im_path in enumerate(annots['ims']):
+                seq = im_path.split('/')[1]
+                is_val = False
+                for v in val_sets:
+                    if seq.startswith(v):
+                        is_val = True
+
+                if not is_val:
+                    idxs.append(i)
+
+            idxs = np.array(idxs)
+            self.split = 'train'
+        else:
+            idxs = np.arange(len(annots['ims']))
         self.cams = annots['cams']
 
         self.ims = np.array(annots['ims'])[idxs]

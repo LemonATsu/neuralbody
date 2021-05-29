@@ -200,6 +200,12 @@ class DatasetCatalog(object):
             'ann_file': 'data/h36m/{}/annots.npy'.format(subject),
             'split': 'train',
         },
+        'H36M_SPIN_{}_Train_Val'.format(subject): {
+            'data_root': 'data/h36m',
+            'subject': '{}'.format(subject),
+            'ann_file': 'data/h36m/{}/annots.npy'.format(subject),
+            'split': 'train_val',
+        },
         'H36M_SPIN_{}_Test'.format(subject): {
             'data_root': 'data/h36m',
             'subject': '{}'.format(subject),
