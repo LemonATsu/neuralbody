@@ -25,6 +25,10 @@ class Dataset(data.Dataset):
         self.cams = annots['cams']
 
         idxs = np.arange(len(annots['ims']))
+        if split == 'train_val':
+            self.split = 'train'
+            n_val = 230 if subject.startswith('Weipeng') else 327
+            idxs = idxs[:-n_val]
         self.ims = np.array(annots['ims'])[idxs]
         self.cam_inds = idxs
 
