@@ -24,7 +24,7 @@ human: 313
 subject: 'Weipeng_outdoor'
 
 train:
-    dataset: Perfcap_Weipeng_outdoor_Train_val
+    dataset: Perfcap_Weipeng_outdoor_Train_Val
     batch_size: 1
     collator: ''
     lr: 5e-4
