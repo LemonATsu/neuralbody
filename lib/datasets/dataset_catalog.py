@@ -218,6 +218,15 @@ class DatasetCatalog(object):
             'ann_file': 'data/h36m/{}/annots.npy'.format(subject),
             'split': 'test',
         },
+        # SURREAL
+        'SURREAL_Train': {
+            'data_root': 'data/surreal/',
+            'split': 'train',
+        },
+        'SURREAL_Val': {
+            'data_root': 'data/surreal/',
+            'split': 'val',
+        },
         'RENDER_SPIN_perfcap_Test': {
             'data_root': 'perfcap',
             'subject': '{}'.format(subject),
