@@ -15,6 +15,7 @@ import h5py
 class Dataset(data.Dataset):
     def __init__(self, data_root, split):
         super(Dataset, self).__init__()
+        self.scale = 1.7167739038555938
 
         if split == 'train':
             data_root = os.path.join(data_root, 'surreal_train.h5')
@@ -36,7 +37,7 @@ class Dataset(data.Dataset):
         """
 
         dataset = h5py.File(self.data_root, 'r')
-        self.N_imgs = dataset['N_imgs'][()]
+        self.N_imgs = cfg.ni#dataset['N_imgs'][()]
         self.cam_inds = dataset['img_pose_indices'][:]
         self.ims = self.cam_inds
         self.N_kps = dataset['Th'].shape[0]
@@ -47,10 +48,11 @@ class Dataset(data.Dataset):
 
     def _init_dataset(self):
         self._dataset = dataset = h5py.File(self.data_root, 'r', swmr=True)
-        self.cams = {'R': dataset['R'][:], 'T': dataset['T'][:], 'K': dataset['K']}
+        self.cams = {'R': dataset['R'][:], 'T': dataset['T'][:] / self.scale,
+                     'K': dataset['K']}
         self.body_data = {'Rh': dataset['Rh'][:],
-                          'Th': dataset['Th'][:],
-                          'vertices': dataset['vertices'][:]}
+                          'Th': dataset['Th'][:] / self.scale,
+                          'vertices': dataset['vertices'][:] / self.scale}
 
     def get_mask(self, index):
         msk = self._dataset['fg_masks'][index]

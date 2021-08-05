@@ -283,6 +283,12 @@ class DatasetCatalog(object):
             'subject': '{}'.format(subject),
             'split': '{}'.format(cfg.render_type),
         },
+
+        'RENDER_SPIN_SURREAL_Test': {
+            'data_root': 'surreal',
+            'subject': '{}'.format(subject),
+            'split': '{}'.format(cfg.render_type),
+        },
     }
 
     @staticmethod

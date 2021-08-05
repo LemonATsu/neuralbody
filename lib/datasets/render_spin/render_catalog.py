@@ -27,6 +27,7 @@ h36m_s9 = {
     'interpolate': set_dict(s9_idx, n_step=10, undo_rot=True,
                             center_cam=True),
     'bubble': set_dict(s9_idx, n_step=30),
+    'val': set_dict(np.load('data/h36m/S9_val_idxs.npy'), length=1, skip=1),
 }
 
 s11_idx = [213, 656, 904, 1559, 1815, 2200, 2611, 2700, 3110, 3440, 3605]
@@ -41,10 +42,17 @@ h36m_s11 = {
     'interpolate': set_dict(s11_idx, n_step=10, undo_rot=True,
                             center_cam=True),
     'bubble': set_dict(s11_idx, n_step=30),
+    'val': set_dict(np.load('data/h36m/S11_val_idxs.npy'), length=1, skip=1),
 }
 
 # SURREAL
 easy_idx = [10, 70, 350, 420, 490, 910, 980, 1050]
+surreal_val = {
+    'data_root': None,
+    'data_h5': 'data/surreal/surreal_val.h5',
+    'val': set_dict(np.arange(1200)[-10:], length=1, skip=1),
+    'ann_file': 'data/surreal/surreal_val.h5',
+}
 surreal_easy = {
     'data_h5': 'data/surreal_hr/surreal_hr.h5',
     'retarget': set_dict(easy_idx, length=25, skip=1),
@@ -73,6 +81,7 @@ perfcap_weipeng = {
                             center_cam=True),
     'bubble': set_dict(weipeng_idx, n_step=30),
     'all': set_dict(np.arange(1151)),
+    'val': set_dict(np.arange(1151)[-230:]),
 }
 
 nadia_idx = [0, 65, 100, 125, 230, 280, 410, 560, 600, 630, 730, 770,
@@ -90,6 +99,7 @@ perfcap_nadia = {
                             center_cam=True),
     'bubble': set_dict(nadia_idx, n_step=30),
     'all': set_dict(np.arange(1635)),
+    'val': set_dict(np.arange(1635)[-327:]),
 }
 
 # Mixamo
@@ -146,6 +156,7 @@ RenderCatalog['h36m'] = {
     'S11': h36m_s11,
 }
 RenderCatalog['surreal'] = {
+    'surreal': surreal_val,
     'easy': surreal_easy,
     'hard': surreal_hard,
 }

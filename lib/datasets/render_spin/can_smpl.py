@@ -1,8 +1,10 @@
 import torch
+import h5py
 import torch.utils.data as data
 from lib.utils import base_utils
 from PIL import Image
 import numpy as np
+import deepdish as dd
 import json
 import os
 import imageio
@@ -99,6 +101,39 @@ def load_bubble(data_root, annots, smpl_path_map, selected_idxs,
     return ims, smpls, cams
 
 
+def load_surreal(annots, selected_idxs, **kwargs):
+    import pdb; pdb.set_trace()
+    cams = {'K': annots['K'][selected_idxs],
+            'R': annots['R'][selected_idxs],
+            'T': annots['T'][selected_idxs],
+            'cam_inds': selected_idxs}
+
+    N_kps = annots['vertices'].shape[0]
+    kp_idxs = selected_idxs % N_kps
+    smpls = {'vertices': annots['vertices'][kp_idxs],
+             'Rh': annots['Rh'][kp_idxs],
+             'Th': annots['Th'][kp_idxs],
+             'shapes': annots['shapes'][:],
+             'poses': annots['poses'][kp_idxs]}
+
+    """
+    n_bullet = 5
+    RT = np.concatenate([cams['R'], cams['T']], axis=-1)
+    RT_h = to_homo(RT)
+    c2ws = generate_bullet_time(np.linalg.inv(RT_h), n_bullet).transpose(1, 0, 2, 3)
+    RT = np.linalg.inv(c2ws)
+    R = RT[..., :3, :3].reshape(-1, 3, 3)
+    T = RT[..., :3, -1:].reshape(-1, 3, 1)
+    K = cams['K'][:, None].repeat(n_bullet, 1).reshape(-1, 3, 3)
+    selected_idxs = selected_idxs[:, None].repeat(n_bullet, 1).reshape(-1)
+
+    cams = {"K": K, "R": R, "T": T, "cam_inds": selected_idxs}
+    """
+
+
+    return None, smpls, cams
+
+
 def load_retarget(data_root, annots, smpl_path_map, selected_idxs, length=30, skip=1,
                   center_kps=False, refined=None, idx_map=None):
     l = length
@@ -121,6 +156,7 @@ def load_retarget(data_root, annots, smpl_path_map, selected_idxs, length=30, sk
         poses = rot_to_axisang(poses).reshape(B, J, 3)
         poses = poses[selected_idxs]
     else:
+        print("!!!load unrefined poses!!!")
         Rhs, Ths, poses, shapes = load_smpl_from_paths(smpl_paths)
         poses = np.concatenate([Rhs[:, None], poses], axis=1)
     smpls = spin_smpl_to_nb(torch.FloatTensor(shapes), torch.FloatTensor(poses))
@@ -261,8 +297,16 @@ class Dataset(data.Dataset):
         render_args = catalog[subject][split]
         idxs = render_args['selected_idxs']
         self.mul = 1.05 if data_root == 'perfcap' else 1.00
+        self.subject = subject
 
-        annots = np.load(ann_file, allow_pickle=True).item()
+        # for validation
+        self.is_val = False
+        self.bg_imgs, self.bg_indices = None, None
+
+        if subject != 'surreal':
+            annots = np.load(ann_file, allow_pickle=True).item()
+        else:
+            annots = h5py.File(ann_file, 'r')
 
         smpl_path_maps = {
             'perfcap': ('images', 'smpl'),
@@ -309,6 +353,19 @@ class Dataset(data.Dataset):
             ims, smpls, cams = load_retarget(self.data_root, annots,
                                              smpl_path_maps[data_root],
                                              catalog[subject]['idx_map'], length=1)
+        elif split == 'val':
+            if subject == 'surreal':
+                ims, smpls, cams = load_surreal(annots, **render_args)
+            else:
+                ims, smpls, cams = load_retarget(self.data_root, annots,
+                                             smpl_path_maps[data_root],
+                                             render_args['selected_idxs'],
+                                             center_kps=False, refined=refined,
+                                             length=1, skip=1)
+                self.bg_imgs = dd.io.load(catalog[subject]['data_h5'], '/bkgds')
+                self.bg_indices = dd.io.load(catalog[subject]['data_h5'], '/bkgd_idxs')[cams['cam_inds']]
+                self.bg_indices = self.bg_indices.astype(np.int64)
+            self.is_val = True
 
         self._ims = ims
         self.ims = np.arange(len(smpls['vertices']))
@@ -333,12 +390,20 @@ class Dataset(data.Dataset):
         min_xyz = np.min(xyz, axis=0)
         max_xyz = np.max(xyz, axis=0)
 
-        min_xyz[0] -= 0.10
-        max_xyz[0] += 0.10
-        min_xyz[1] -= 0.15
-        max_xyz[1] += 0.15
-        min_xyz[2] -= 0.10
-        max_xyz[2] += 0.10
+        if not self.is_val:
+            min_xyz[0] -= 0.10
+            max_xyz[0] += 0.10
+            min_xyz[1] -= 0.15
+            max_xyz[1] += 0.15
+            min_xyz[2] -= 0.10
+            max_xyz[2] += 0.10
+        else:
+            min_xyz[0] -= 0.12
+            max_xyz[0] += 0.12
+            min_xyz[1] -= 0.17
+            max_xyz[1] += 0.17
+            min_xyz[2] -= 0.12
+            max_xyz[2] += 0.12
         """
         if cfg.big_box:
             min_xyz -= 0.18
@@ -395,7 +460,6 @@ class Dataset(data.Dataset):
         msk = np.ones((cfg.H, cfg.W), dtype=np.uint8)
 
         cam_ind = self.cam_inds[index]
-        #img = imageio.imread(os.path.join(self.data_root, self._ims[cam_ind])) / 255.
         K = np.array(self.cams['K'][index])
         R = np.array(self.cams['R'][index])
         T = np.array(self.cams['T'][index]) / self.mul
@@ -428,6 +492,7 @@ class Dataset(data.Dataset):
                 img, msk, K, R, T, can_bounds, self.nrays, self.split)
         acc = if_nerf_dutils.get_acc(coord_, msk)
 
+
         ret = {
             'feature': feature,
             'coord': coord,
@@ -443,9 +508,15 @@ class Dataset(data.Dataset):
             #'img_gt': img,
         }
 
+        if self.is_val and not self.subject == 'surreal':
+            gt_img = imageio.imread(os.path.join(self.data_root, self._ims[index])) / 255.
+            ret['gt_img'] = np.array(gt_img).astype(np.float32)
+            if self.bg_imgs is not None:
+                ret['bg_img'] = self.bg_imgs[self.bg_indices[index]] / 255.
+
         R = cv2.Rodrigues(Rh)[0].astype(np.float32)
         i = index #// self.num_cams
-        if cfg.selected_framecode >= 0:
+        if cfg.selected_framecode >= -1:
             i = cfg.selected_framecode
         meta = {
             'bounds': bounds,

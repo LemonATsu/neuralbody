@@ -28,6 +28,7 @@ cfg.smpl = 'smpl_4views_5e-4'
 cfg.vertices = 'vertices'
 cfg.params = 'params_4views_5e-4'
 cfg.mask_bkgd = True
+cfg.use_bkgd = False
 cfg.sample_smpl = False
 cfg.sample_grid = False
 cfg.sample_fg_ratio = 0.7

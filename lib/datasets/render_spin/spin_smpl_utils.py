@@ -38,12 +38,15 @@ def rotate_y(theta):
                      [sin,   0,  cos, 0],
                      [0,   0,      0, 1]], dtype=np.float32)
 
-def generate_bullet_time(c2w, n_views=20):
+def generate_bullet_time(c2w, n_views=20, along_z=False):
 
     y_angles = -np.linspace(0, math.radians(360), n_views+1)[:-1]
     c2ws = []
     for a in y_angles:
-        c = rotate_y(a) @ c2w
+        if not along_z:
+            c = rotate_y(a) @ c2w
+        else:
+            c = rotate_z(a) @ c2w
         c2ws.append(c)
     return np.array(c2ws)
 

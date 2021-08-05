@@ -3,7 +3,7 @@ import torch
 from lib.config import cfg
 
 
-def raw2outputs(raw, z_vals, rays_d, raw_noise_std=0, white_bkgd=False):
+def raw2outputs(raw, z_vals, rays_d, raw_noise_std=0, white_bkgd=False, bkgd=None, use_bkgd=False):
     """Transforms model's predictions to semantically meaningful values.
     Args:
         raw: [num_rays, num_samples along ray, 4]. Prediction from model.
@@ -22,7 +22,8 @@ def raw2outputs(raw, z_vals, rays_d, raw_noise_std=0, white_bkgd=False):
     dists = z_vals[..., 1:] - z_vals[..., :-1]
     dists = torch.cat(
         [dists,
-         torch.Tensor([1e10]).expand(dists[..., :1].shape).to(dists)],
+         #torch.Tensor([1e10]).expand(dists[..., :1].shape).to(dists)],
+         torch.Tensor([0.5]).expand(dists[..., :1].shape).to(dists)],
         -1)  # [N_rays, N_samples]
 
     dists = dists * torch.norm(rays_d[..., None, :], dim=-1)
@@ -45,7 +46,9 @@ def raw2outputs(raw, z_vals, rays_d, raw_noise_std=0, white_bkgd=False):
                               depth_map / torch.sum(weights, -1))
     acc_map = torch.sum(weights, -1)
 
-    if white_bkgd:
+    if use_bkgd:
+        rgb_map = rgb_map + (1. - acc_map[..., None]) * bkgd.view(-1, 3)
+    elif white_bkgd:
         rgb_map = rgb_map + (1. - acc_map[..., None])
 
     return rgb_map, disp_map, acc_map, weights, depth_map

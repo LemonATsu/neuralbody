@@ -127,6 +127,8 @@ class Renderer(torch.nn.Module):
         ray_d = batch['ray_d']#[None]
         near = batch['near']#[None]
         far = batch['far']#[None]
+        #bkgd = None if 'bkgd_val' not in batch else batch['bkgd_val']
+        bkgd = batch.get('bkgd_val', None)
         sh = ray_o.shape
 
         pts, z_vals = self.get_sampling_points(ray_o, ray_d, near, far)
@@ -159,7 +161,8 @@ class Renderer(torch.nn.Module):
         z_vals = z_vals.view(-1, z_vals.size(2))
         ray_d = ray_d.view(-1, 3)
         rgb_map, disp_map, acc_map, weights, depth_map = raw2outputs(
-            raw, z_vals.to(raw.device), ray_d.to(raw.device), cfg.raw_noise_std, cfg.white_bkgd)
+            raw, z_vals.to(raw.device), ray_d.to(raw.device), cfg.raw_noise_std, cfg.white_bkgd, bkgd=bkgd,
+            use_bkgd=cfg.use_bkgd)
         rgb_map = rgb_map.view(*sh[:-1], -1)#[0]
         acc_map = acc_map.view(*sh[:-1])#[0]
         depth_map = depth_map.view(*sh[:-1])#[0]
