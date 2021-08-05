@@ -199,6 +199,26 @@ class DatasetCatalog(object):
             'ann_file': 'data/MonoPerfCap/{}/annots.npy'.format(subject),
             'split': 'test',
         },
+        # PerfCapH5
+        'Perfcap_H5_{}_Train'.format(subject): {
+            'data_root': 'data/',
+            'subject': '{}'.format(subject),
+            'ann_file': 'data/MonoPerfCap/{}/annots.npy'.format(subject),
+            'split': 'train',
+        },
+        'Perfcap_H5_{}_Train_Val'.format(subject): {
+            'data_root': 'data/',
+            'subject': '{}'.format(subject),
+            'ann_file': 'data/MonoPerfCap/{}/annots.npy'.format(subject),
+            'split': 'train_val',
+        },
+        'Perfcap_H5_{}_Test'.format(subject): {
+            'data_root': 'data/',
+            'subject': '{}'.format(subject),
+            'ann_file': 'data/MonoPerfCap/{}/annots.npy'.format(subject),
+            'split': 'test',
+        },
+
         # H36M - SPIN
         'H36M_SPIN_{}_Train'.format(subject): {
             'data_root': 'data/h36m',
@@ -217,6 +237,26 @@ class DatasetCatalog(object):
             'subject': '{}'.format(subject),
             'ann_file': 'data/h36m/{}/annots.npy'.format(subject),
             'split': 'test',
+        },
+
+        # H36M - H5
+        'H36M_SPINH5_{}_Train'.format(subject): {
+            'data_root': 'data/h36m',
+            'subject': '{}'.format(subject),
+            'ann_file': 'data/h36m/{}/annots.npy'.format(subject),
+            'split': 'train',
+        },
+        'H36M_SPINH5_{}_Train_Val'.format(subject): {
+            'data_root': 'data/h36m',
+            'subject': '{}'.format(subject),
+            'ann_file': 'data/h36m/{}/annots.npy'.format(subject),
+            'split': 'train_val',
+        },
+        'H36M_SPINH5_{}_Test'.format(subject): {
+            'data_root': 'data/h36m',
+            'subject': '{}'.format(subject),
+            'ann_file': 'data/h36m/{}/annots.npy'.format(subject),
+            'split': 'train_val',
         },
         # SURREAL
         'SURREAL_Train': {
