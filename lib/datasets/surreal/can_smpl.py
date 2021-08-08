@@ -38,9 +38,15 @@ class Dataset(data.Dataset):
 
         dataset = h5py.File(self.data_root, 'r')
         self.N_imgs = cfg.ni#dataset['N_imgs'][()]
-        self.cam_inds = dataset['img_pose_indices'][:]
+        selected_views = [0, 3, 6]
+        selected_kps = np.load('data/surreal/surreal_rand_400.npy')
+        assert cfg.ni == 1200
+
+        self._idx_map = np.concatenate([s * 1200 + selected_kps for s in selected_views])
+        self.cam_inds = np.arange(dataset['R'].shape[0])
         self.ims = self.cam_inds
         self.N_kps = dataset['Th'].shape[0]
+        print(f'USE NI {self.N_imgs}, N_kps {self.N_kps}, max R {self.cam_inds.max()}')
         dataset.close()
 
         self.num_cams = len(self.ims) // self.N_kps
@@ -123,6 +129,8 @@ class Dataset(data.Dataset):
         return feature, coord, out_sh, can_bounds, bounds, Rh, Th, center, rot, trans
 
     def __getitem__(self, index):
+        if self._idx_map is not None:
+            index = self._idx_map[index]
 
         if self._dataset is None:
             self._init_dataset()
