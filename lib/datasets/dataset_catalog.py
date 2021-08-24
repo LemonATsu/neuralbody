@@ -180,6 +180,20 @@ class DatasetCatalog(object):
             'data/mixamo/{}/annots.npy'.format(subject),
             'split': 'test'
         },
+        'Mixamo_H5_{}_Train'.format(subject): {
+            'data_root': 'data/mixamo/',
+            'subject': '{}'.format(subject),
+            'ann_file':
+            'data/mixamo/{}/annots.npy'.format(subject),
+            'split': 'train'
+        },
+        'Mixamo_H5_{}_Test'.format(subject): {
+            'data_root': 'data/mixamo/',
+            'subject': '{}'.format(subject),
+            'ann_file':
+            'data/mixamo/{}/annots.npy'.format(subject),
+            'split': 'test'
+        },
         # PerfCap
         'Perfcap_{}_Train'.format(subject): {
             'data_root': 'data/',
